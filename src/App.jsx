@@ -1,20 +1,67 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth, HOME_FOR_ROLE } from './lib/auth.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
+import Login from './pages/Login.jsx'
+import ReceptionDashboard from './pages/ReceptionDashboard.jsx'
+import NewVisitor from './pages/NewVisitor.jsx'
+import PaDashboard from './pages/PaDashboard.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
+
 export default function App() {
   return (
-    <div className="min-h-full bg-slate-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 p-8 text-center">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-500 text-white text-xl font-bold">
-          DG
-        </div>
-        <h1 className="text-xl font-semibold text-slate-900">
-          Davric Group
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Visitor Management System
-        </p>
-        <div className="mt-6 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">
-          Step 1 complete — scaffold is running.
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+
+          <Route
+            path="/reception"
+            element={
+              <ProtectedRoute allow={['receptionist', 'super_admin']}>
+                <ReceptionDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reception/new"
+            element={
+              <ProtectedRoute allow={['receptionist', 'super_admin']}>
+                <NewVisitor />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/pa"
+            element={
+              <ProtectedRoute allow={['pa', 'super_admin']}>
+                <PaDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allow={['super_admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/" element={<RoleHome />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
+}
+
+/** Sends each signed-in user to the dashboard their role belongs to. */
+function RoleHome() {
+  const { session, role, loading } = useAuth()
+  if (loading) return null
+  if (!session) return <Navigate to="/login" replace />
+  return <Navigate to={HOME_FOR_ROLE[role] ?? '/login'} replace />
 }

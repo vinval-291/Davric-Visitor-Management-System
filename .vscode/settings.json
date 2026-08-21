@@ -1,0 +1,9 @@
+{
+  // This is a Node/Vite project, not Python. Vite loads .env itself at
+  // startup, so the Python extension must not inject it into terminals --
+  // that would expose the Supabase credentials to every shell session.
+  "python.envFile": "",
+  "python.terminal.useEnvFile": false,
+
+  "files.eol": "\n"
+}
