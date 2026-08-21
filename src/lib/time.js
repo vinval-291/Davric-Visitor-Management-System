@@ -21,6 +21,41 @@ export function elapsed(fromIso, toIso = null) {
   return rest ? `${hrs} hr ${rest} min` : `${hrs} hr`
 }
 
+/** True if this moment falls before midnight today. */
+export function isBeforeToday(iso) {
+  if (!iso) return false
+  const midnight = new Date()
+  midnight.setHours(0, 0, 0, 0)
+  return new Date(iso) < midnight
+}
+
+/**
+ * Clock time for today, but with a date once it is not today.
+ *
+ * A visitor still inside from Tuesday must not read as "10:32 AM" and
+ * look like this morning. Reception has to be able to spot a stale
+ * record at a glance, because a forgotten check-out inflates the
+ * "currently inside" figure indefinitely.
+ */
+export function smartTime(iso) {
+  if (!iso) return '—'
+  const when = new Date(iso)
+  const time = clockTime(iso)
+
+  const midnight = new Date()
+  midnight.setHours(0, 0, 0, 0)
+  if (when >= midnight) return time
+
+  const yesterday = new Date(midnight)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (when >= yesterday) return `Yesterday ${time}`
+
+  return `${when.toLocaleDateString([], {
+    day: '2-digit',
+    month: 'short',
+  })} ${time}`
+}
+
 /** Full date and time for records and reports. */
 export function dateTime(iso) {
   if (!iso) return '—'

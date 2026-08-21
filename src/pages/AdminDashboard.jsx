@@ -1,20 +1,45 @@
-import AppShell, { ComingSoon } from '../components/AppShell.jsx'
+import { useState } from 'react'
+import AppShell from '../components/AppShell.jsx'
+import Assignments from '../components/admin/Assignments.jsx'
+import Executives from '../components/admin/Executives.jsx'
+import Departments from '../components/admin/Departments.jsx'
+import Users from '../components/admin/Users.jsx'
 import AccessProbe from '../components/AccessProbe.jsx'
-import { useAuth } from '../lib/auth.jsx'
+
+const TABS = [
+  { key: 'assignments', label: 'PA assignments', render: () => <Assignments /> },
+  { key: 'executives', label: 'Executives', render: () => <Executives /> },
+  { key: 'departments', label: 'Departments', render: () => <Departments /> },
+  { key: 'users', label: 'Users', render: () => <Users /> },
+  { key: 'access', label: 'Access check', render: () => <AccessProbe /> },
+]
 
 export default function AdminDashboard() {
-  const { profile } = useAuth()
+  const [tab, setTab] = useState('assignments')
+  const current = TABS.find((t) => t.key === tab)
+
   return (
     <AppShell
       title="Administration"
-      subtitle={`Signed in as ${profile?.full_name}`}
+      subtitle="Departments, executives, PA routing and user access"
     >
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ComingSoon step={11}>
-          Users, departments, executives and PA assignment
-        </ComingSoon>
-        <AccessProbe />
+      <div className="mb-6 flex flex-wrap gap-1 border-b border-steel-200">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
+              tab === t.key
+                ? 'border-brand-500 text-brand-700'
+                : 'border-transparent text-steel-500 hover:text-steel-800'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {current?.render()}
     </AppShell>
   )
 }

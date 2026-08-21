@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import AppShell from '../components/AppShell.jsx'
 import VisitorDetail from '../components/VisitorDetail.jsx'
 import { useVisitors } from '../lib/useVisitors.js'
-import { clockTime, elapsed } from '../lib/time.js'
+import { smartTime, elapsed, isBeforeToday } from '../lib/time.js'
 import { normalizePhone } from '../lib/phone.js'
 
 const FILTERS = [
@@ -162,6 +162,9 @@ export default function ReceptionDashboard() {
 function VisitorRow({ visitor: v, onOpen, onCheckOut }) {
   const [busy, setBusy] = useState(false)
   const gone = Boolean(v.check_out_time)
+  // Still inside from an earlier day: almost always a check-out that
+  // reception forgot, not somebody who slept in the building.
+  const stale = !gone && isBeforeToday(v.check_in_time)
 
   async function handleCheckOut(e) {
     e.stopPropagation()
@@ -188,7 +191,9 @@ function VisitorRow({ visitor: v, onOpen, onCheckOut }) {
         )}
       </td>
       <td className="px-4 py-3 text-steel-700">
-        {clockTime(v.check_in_time)}
+        <span className={stale ? 'font-medium text-brand-700' : undefined}>
+          {smartTime(v.check_in_time)}
+        </span>
         <p className="text-xs text-steel-400">
           {gone
             ? `stayed ${elapsed(v.check_in_time, v.check_out_time)}`
@@ -197,6 +202,11 @@ function VisitorRow({ visitor: v, onOpen, onCheckOut }) {
       </td>
       <td className="px-4 py-3">
         <StatusPill gone={gone} admitted={Boolean(v.admitted_at)} />
+        {stale && (
+          <span className="mt-1 block text-xs font-medium text-brand-700">
+            Not checked out
+          </span>
+        )}
       </td>
       <td className="px-4 py-3 text-right">
         {!gone && (
