@@ -11,9 +11,17 @@ const baseInput =
   'focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 ' +
   'disabled:opacity-60'
 
-export function Field({ label, hint, required, error, children }) {
+/**
+ * `as` must be "div" whenever the field contains anything other than a
+ * single input. A <label> forwards any click inside it to the first
+ * form control it wraps, so a label around the signature pad sends
+ * every mouse-up straight to the "Clear signature" button and wipes
+ * the signature the moment the visitor lifts the pen.
+ */
+export function Field({ label, hint, required, error, as = 'label', children }) {
+  const Wrapper = as
   return (
-    <label className="block">
+    <Wrapper className="block">
       <span className="text-sm font-medium text-steel-700">
         {label}
         {required && <span className="ml-0.5 text-brand-600">*</span>}
@@ -25,7 +33,7 @@ export function Field({ label, hint, required, error, children }) {
           {error}
         </span>
       )}
-    </label>
+    </Wrapper>
   )
 }
 

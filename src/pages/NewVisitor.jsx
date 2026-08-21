@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import AppShell from '../components/AppShell.jsx'
 import { Field, TextInput, TextArea, Select } from '../components/Field.jsx'
+import SignaturePad from '../components/SignaturePad.jsx'
 import { useExecutives } from '../lib/useExecutives.js'
+import { formatPhone, normalizePhone, isValidPhone } from '../lib/phone.js'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../lib/auth.jsx'
 
@@ -16,14 +18,15 @@ const EMPTY = {
 
 export default function NewVisitor() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const { groups, loading, error: loadError } = useExecutives()
+  const signature = useRef(null)
 
   const [form, setForm] = useState(EMPTY)
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [checkedIn, setCheckedIn] = useState(null)
+  const [notified, setNotified] = useState(null)
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -38,8 +41,12 @@ export default function NewVisitor() {
       next.full_name = 'That name looks too short'
     }
     if (!form.executive_id) next.executive_id = 'Select who they are visiting'
-    if (form.phone && !/^[\d+()\-\s]{7,20}$/.test(form.phone.trim())) {
-      next.phone = 'Enter a valid phone number'
+    if (!isValidPhone(form.phone)) {
+      next.phone = 'Phone number must be 11 digits'
+    }
+    // Remove this check to make signing optional.
+    if (signature.current?.isEmpty()) {
+      next.signature = 'Ask the visitor to sign before checking in'
     }
     setErrors(next)
     return Object.keys(next).length === 0
@@ -51,6 +58,28 @@ export default function NewVisitor() {
     if (!validate()) return
 
     setBusy(true)
+
+    // The signature is uploaded BEFORE the visit row is created, so the
+    // row is complete and correct from the moment it exists. Writing the
+    // row first and patching the path in afterwards would need a second
+    // update, which the immutability guard from Step 4 rightly refuses.
+    let signaturePath = null
+    const blob = await signature.current?.toBlob()
+
+    if (blob) {
+      const path = `${new Date().getFullYear()}/${crypto.randomUUID()}.png`
+      const { error: uploadError } = await supabase.storage
+        .from('signatures')
+        .upload(path, blob, { contentType: 'image/png', upsert: false })
+
+      if (uploadError) {
+        setBusy(false)
+        setSubmitError(`Could not save the signature: ${uploadError.message}`)
+        return
+      }
+      signaturePath = path
+    }
+
     // The database fills in check_in_time, status, and the executive
     // and department snapshots. It also creates the PA notification,
     // in this same transaction.
@@ -58,10 +87,11 @@ export default function NewVisitor() {
       .from('visitors')
       .insert({
         full_name: form.full_name.trim(),
-        phone: form.phone.trim() || null,
+        phone: normalizePhone(form.phone) || null,
         organization: form.organization.trim() || null,
         purpose: form.purpose.trim() || null,
         executive_id: form.executive_id,
+        signature_path: signaturePath,
         created_by: user.id,
       })
       .select(
@@ -71,10 +101,21 @@ export default function NewVisitor() {
 
     setBusy(false)
     if (error) {
+      // Do not leave an orphaned signature behind if the row failed.
+      if (signaturePath) {
+        await supabase.storage.from('signatures').remove([signaturePath])
+      }
       setSubmitError(error.message)
       return
     }
     setCheckedIn(data)
+
+    // Who actually received the alert. Returns the PA(s) assigned to
+    // the executive, or the super admins when none is assigned.
+    const { data: names } = await supabase.rpc('visit_notified_names', {
+      visit_id: data.id,
+    })
+    setNotified(names ?? [])
   }
 
   function reset() {
@@ -82,12 +123,14 @@ export default function NewVisitor() {
     setErrors({})
     setSubmitError(null)
     setCheckedIn(null)
+    setNotified(null)
+    signature.current?.clear()
   }
 
   if (checkedIn) {
     return (
       <AppShell title="Checked in">
-        <CheckedInCard visitor={checkedIn} onAnother={reset} />
+        <CheckedInCard visitor={checkedIn} notified={notified} onAnother={reset} />
       </AppShell>
     )
   }
@@ -123,13 +166,17 @@ export default function NewVisitor() {
             </Field>
           </div>
 
-          <Field label="Phone number" error={errors.phone}>
+          <Field label="Phone number" hint="11 digits" error={errors.phone}>
             <TextInput
               value={form.phone}
-              onChange={set('phone')}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))
+                setErrors((x) => ({ ...x, phone: undefined }))
+              }}
               error={errors.phone}
               placeholder="0801 234 5678"
-              inputMode="tel"
+              inputMode="numeric"
+              maxLength={13}
               autoComplete="off"
             />
           </Field>
@@ -191,6 +238,20 @@ export default function NewVisitor() {
               />
             </Field>
           </div>
+
+          <div className="sm:col-span-2">
+            <Field
+              as="div"
+              label="Visitor signature"
+              required
+              error={errors.signature}
+              hint="Hand the device to the visitor to sign"
+            >
+              <div className="mt-1.5">
+                <SignaturePad ref={signature} disabled={busy} />
+              </div>
+            </Field>
+          </div>
         </div>
 
         {submitError && (
@@ -220,15 +281,12 @@ export default function NewVisitor() {
           </button>
         </div>
 
-        <p className="mt-4 text-xs text-steel-400">
-          Signature capture is added in Step 7.
-        </p>
       </form>
     </AppShell>
   )
 }
 
-function CheckedInCard({ visitor, onAnother }) {
+function CheckedInCard({ visitor, notified, onAnother }) {
   const time = new Date(visitor.check_in_time).toLocaleTimeString([], {
     hour: 'numeric',
     minute: '2-digit',
@@ -253,9 +311,20 @@ function CheckedInCard({ visitor, onAnother }) {
               ` · ${visitor.department_name_snapshot}`}
           </p>
           <p className="mt-0.5 text-steel-600">Check-in time: {time}</p>
-          <p className="mt-3 text-sm text-steel-500">
-            The assigned PA has been notified.
-          </p>
+          {notified === null ? (
+            <p className="mt-3 text-sm text-steel-400">Notifying…</p>
+          ) : notified.length > 0 ? (
+            <p className="mt-3 text-sm text-steel-600">
+              Notified:{' '}
+              <span className="font-medium text-steel-800">
+                {notified.join(', ')}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-brand-700">
+              Nobody was notified for this visit. Tell an administrator.
+            </p>
+          )}
         </div>
       </div>
 
