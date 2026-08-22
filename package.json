@@ -12,7 +12,12 @@
     "test:security": "node --env-file=.env scripts/security-test.mjs",
     "icons": "node scripts/make-icons.mjs",
     "diagnose:realtime": "node --env-file=.env scripts/diagnose-realtime.mjs",
-    "vapid": "node scripts/generate-vapid.mjs"
+    "vapid": "node scripts/generate-vapid.mjs",
+    "sb": "supabase",
+    "sb:login": "supabase login",
+    "sb:link": "supabase link --project-ref zqkbgturnbezukrcoqnl",
+    "push:deploy": "supabase functions deploy send-push",
+    "push:logs": "supabase functions logs send-push"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
@@ -24,6 +29,7 @@
     "@tailwindcss/vite": "^4.1.0",
     "@vitejs/plugin-react": "^5.0.0",
     "sharp": "^0.35.3",
+    "supabase": "^2.115.0",
     "tailwindcss": "^4.1.0",
     "vite": "^7.1.0",
     "vite-plugin-pwa": "^1.3.0"

@@ -12,3 +12,7 @@ dist-ssr
 # .claude/launch.json is shared; this one is not.
 .claude/settings.json
 .claude/settings.local.json
+
+# Supabase CLI local state
+supabase/.temp
+supabase/.branches
