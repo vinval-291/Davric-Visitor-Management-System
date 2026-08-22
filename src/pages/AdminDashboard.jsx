@@ -4,6 +4,7 @@ import Assignments from '../components/admin/Assignments.jsx'
 import Executives from '../components/admin/Executives.jsx'
 import Departments from '../components/admin/Departments.jsx'
 import Users from '../components/admin/Users.jsx'
+import AuditLog from '../components/admin/AuditLog.jsx'
 import AccessProbe from '../components/AccessProbe.jsx'
 
 const TABS = [
@@ -11,7 +12,12 @@ const TABS = [
   { key: 'executives', label: 'Executives', render: () => <Executives /> },
   { key: 'departments', label: 'Departments', render: () => <Departments /> },
   { key: 'users', label: 'Users', render: () => <Users /> },
-  { key: 'access', label: 'Access check', render: () => <AccessProbe /> },
+  { key: 'audit', label: 'Audit activity', render: () => <AuditLog /> },
+  // Development aid only. It exposes row counts per table, which is
+  // useful while building policies and noise in production.
+  ...(import.meta.env.DEV
+    ? [{ key: 'access', label: 'Access check', render: () => <AccessProbe /> }]
+    : []),
 ]
 
 export default function AdminDashboard() {

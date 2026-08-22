@@ -1,14 +1,20 @@
+import { useCallback } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth, ROLE_LABEL } from '../lib/auth.jsx'
+import { useIdleTimeout } from '../lib/useIdleTimeout.js'
 import Logo from './Logo.jsx'
 
 const NAV_BY_ROLE = {
   super_admin: [
     { to: '/admin', label: 'Admin' },
     { to: '/reception', label: 'Reception' },
+    { to: '/history', label: 'History' },
     { to: '/pa', label: 'Notifications' },
   ],
-  receptionist: [{ to: '/reception', label: 'Reception' }],
+  receptionist: [
+    { to: '/reception', label: 'Reception' },
+    { to: '/history', label: 'History' },
+  ],
   pa: [{ to: '/pa', label: 'Notifications' }],
 }
 
@@ -16,9 +22,22 @@ export default function AppShell({ title, subtitle, actions, children }) {
   const { profile, role, signOut } = useAuth()
   const nav = NAV_BY_ROLE[role] ?? []
 
+  const handleTimeout = useCallback(() => signOut(), [signOut])
+  const { secondsLeft } = useIdleTimeout(handleTimeout)
+
   return (
     <div className="min-h-full bg-steel-50">
       <div className="h-1.5 w-full bg-brand-500" />
+
+      {secondsLeft !== null && (
+        <div
+          role="alert"
+          className="bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white"
+        >
+          Signing out in {secondsLeft}s for security — touch the screen to stay
+          signed in
+        </div>
+      )}
 
       <header className="border-b border-steel-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">

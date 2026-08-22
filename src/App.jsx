@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Login from './pages/Login.jsx'
 import ReceptionDashboard from './pages/ReceptionDashboard.jsx'
 import NewVisitor from './pages/NewVisitor.jsx'
+import History from './pages/History.jsx'
 import PaDashboard from './pages/PaDashboard.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 
@@ -28,6 +29,15 @@ export default function App() {
             element={
               <ProtectedRoute allow={['receptionist', 'super_admin']}>
                 <NewVisitor />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute allow={['receptionist', 'super_admin']}>
+                <History />
               </ProtectedRoute>
             }
           />
