@@ -98,3 +98,27 @@ self.addEventListener('fetch', (event) => {
     ),
   )
 })
+
+/**
+ * Tapping a notification should land on the app, not a second copy of
+ * it. An already-open window is focused and navigated; only if none
+ * exists is a new one opened.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = event.notification.data?.url ?? '/'
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windows) => {
+        for (const client of windows) {
+          if ('focus' in client) {
+            if ('navigate' in client) client.navigate(target).catch(() => {})
+            return client.focus()
+          }
+        }
+        return self.clients.openWindow(target)
+      }),
+  )
+})

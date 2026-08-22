@@ -78,6 +78,17 @@ export function useVisitors() {
     return null
   }, [])
 
+  // These sets deliberately overlap, which is why the dashboard labels
+  // them carefully rather than inviting the reader to add them up:
+  //
+  //   waiting is a SUBSET of inside -- someone waiting in the lobby is
+  //   on the premises, they simply have not been sent up yet
+  //
+  //   inside counts everyone still on site from ANY day, while today
+  //   counts only today's arrivals. A visitor never checked out
+  //   yesterday appears in inside but not in today
+  //
+  // So inside + out does not equal today, and it should not.
   const today = startOfToday()
   const counts = {
     inside: visitors.filter((v) => !v.check_out_time).length,
@@ -85,6 +96,11 @@ export function useVisitors() {
     today: visitors.filter((v) => v.check_in_time >= today).length,
     out: visitors.filter(
       (v) => v.check_out_time && v.check_in_time >= today,
+    ).length,
+    // Still on site from an earlier day: almost always a forgotten
+    // check-out, and the reason inside can exceed today's arrivals.
+    stale: visitors.filter(
+      (v) => !v.check_out_time && v.check_in_time < today,
     ).length,
   }
 

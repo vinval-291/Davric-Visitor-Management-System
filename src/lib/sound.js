@@ -227,29 +227,50 @@ export async function requestNotificationPermission() {
  * hidden -- if the PA is already looking at the dashboard the card
  * itself is the notification.
  *
- * This works while the app is open or backgrounded. It cannot fire
- * when the app has been fully closed; that needs Web Push, which
- * needs a server to send from. See README.
+ * Android refuses `new Notification()` outright: mobile Chrome throws
+ * "Illegal constructor" and requires the service worker to raise it
+ * instead. That is also what puts the alert in the phone's
+ * notification tray, where a PA who is not holding the phone will
+ * actually see it. Desktop browsers accept either, so the service
+ * worker is tried first and the constructor is only a fallback.
+ *
+ * This still requires the app to be open or backgrounded. Reaching a
+ * fully closed app needs Web Push. See README.
  */
-export function systemNotify({ title, body, tag }) {
+export async function systemNotify({ title, body, tag, url = '/' }) {
   const settings = loadSettings()
   if (!settings.systemNotifications) return
   if (!canNotify() || Notification.permission !== 'granted') return
   if (typeof document !== 'undefined' && !document.hidden) return
 
+  const options = {
+    body,
+    tag,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    renotify: Boolean(tag),
+    requireInteraction: true, // a waiting visitor should not vanish
+    vibrate: [200, 100, 200], // service-worker notifications only
+    data: { url },
+  }
+
   try {
-    const notification = new Notification(title, {
-      body,
-      tag,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      renotify: Boolean(tag),
-    })
+    const registration = await navigator.serviceWorker?.ready
+    if (registration?.showNotification) {
+      await registration.showNotification(title, options)
+      return
+    }
+  } catch {
+    /* fall through to the constructor */
+  }
+
+  try {
+    const notification = new Notification(title, options)
     notification.onclick = () => {
       window.focus()
       notification.close()
     }
   } catch {
-    /* Some browsers require a service-worker registration instead. */
+    /* No notification support. The in-app alert still fires. */
   }
 }
