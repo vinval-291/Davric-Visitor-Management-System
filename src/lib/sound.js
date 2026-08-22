@@ -281,6 +281,7 @@ export async function systemNotify({ title, body, tag, url = '/', force = false 
 
 /** Everything a phone can tell us about why an alert did not appear. */
 export async function notificationDiagnostics() {
+  const { swStatus } = await import('./registerSw.js')
   const out = {
     permission: canNotify() ? Notification.permission : 'unsupported',
     secureContext: window.isSecureContext,
@@ -290,6 +291,8 @@ export async function notificationDiagnostics() {
     serviceWorker: 'unsupported',
     controlling: false,
     build: typeof __BUILD_STAMP__ === 'string' ? __BUILD_STAMP__ : 'unknown',
+    registration: swStatus().state,
+    registrationError: swStatus().error,
   }
 
   if ('serviceWorker' in navigator) {

@@ -62,9 +62,22 @@ async function activeRegistration() {
     'Could not read the service worker. Reload the page and try again.',
   )
 
+  // Nothing registered yet: register now rather than telling the user
+  // to reload and hope. This is the difference between a dead end and
+  // a button that works the first time it is pressed.
   if (!registration) {
-    throw new Error(
-      'The app is not fully installed on this device yet. Reload the page, wait a moment, then try again.',
+    const fresh = await withTimeout(
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }),
+      15000,
+      'The app could not start its background service. Reload the page and try again.',
+    ).catch((err) => {
+      throw new Error(`Could not start the background service: ${err.message}`)
+    })
+
+    return withTimeout(
+      navigator.serviceWorker.ready.then(() => fresh),
+      15000,
+      'The background service was installed but did not start. Close the app completely, reopen it, and try again.',
     )
   }
 

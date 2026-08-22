@@ -529,6 +529,16 @@ ${await pushDebug()}`)
               <Diag label="Service worker" value={diag.serviceWorker} good={diag.serviceWorker === 'active'} />
               <Diag label="Controlling page" value={String(diag.controlling)} good={diag.controlling} />
               <Diag label="Installed app" value={String(diag.standalone)} good={diag.standalone} />
+              <Diag
+                label="Registration"
+                value={diag.registration}
+                good={diag.registration === 'registered'}
+              />
+              {diag.registrationError && (
+                <p className="rounded bg-brand-50 px-2 py-1 font-mono text-brand-700">
+                  {diag.registrationError}
+                </p>
+              )}
               <Diag label="Build" value={diag.build} good />
             </dl>
           )}
