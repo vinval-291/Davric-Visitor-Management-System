@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:db": "node --env-file=.env scripts/test-connection.mjs",
-    "check:schema": "node --env-file=.env scripts/check-schema.mjs"
+    "check:schema": "node --env-file=.env scripts/check-schema.mjs",
+    "test:security": "node --env-file=.env scripts/security-test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
