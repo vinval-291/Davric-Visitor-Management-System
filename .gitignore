@@ -8,10 +8,8 @@ dist-ssr
 *.log
 .vercel
 
-# Local Claude Code tool permissions (machine-specific).
-# .claude/launch.json is shared; this one is not.
-.claude/settings.json
-.claude/settings.local.json
+# Claude Code workspace files — local tooling, not part of the app.
+.claude/
 
 # Supabase CLI local state
 supabase/.temp
