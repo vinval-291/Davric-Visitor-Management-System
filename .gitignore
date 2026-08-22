@@ -7,3 +7,8 @@ dist-ssr
 .DS_Store
 *.log
 .vercel
+
+# Local Claude Code tool permissions (machine-specific).
+# .claude/launch.json is shared; this one is not.
+.claude/settings.json
+.claude/settings.local.json
