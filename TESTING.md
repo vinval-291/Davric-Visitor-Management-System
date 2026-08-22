@@ -165,6 +165,32 @@ offered over plain HTTP.
 - [ ] With the tab visible, no banner appears (the card is enough)
 - [ ] Settings are per device: a second device keeps its own
 
+## 10. Push — alerts to a closed app
+
+Deployed HTTPS only, and each device must be enabled separately under
+**🔔 → Alert me when the app is closed**.
+
+- [ ] The toggle turns on without hanging
+- [ ] `npm run diagnose:push` lists that device
+- [ ] **Close the app completely** (swipe out of recents), have someone
+      check a visitor in, and the phone alerts
+- [ ] Lock the phone, repeat: it still alerts
+- [ ] Tapping the notification opens the app on the right screen, and
+      does not open a second copy
+- [ ] The PA is alerted only for executives they cover
+- [ ] Reception's phone is alerted when a PA sends a visitor up
+- [ ] Turning the toggle off stops alerts, and `diagnose:push` drops
+      that device
+- [ ] Uninstalling the app stops alerts; the next `diagnose:push`
+      reports it pruned
+- [ ] Android: Settings → Apps → Dav-Ric VMS → Notifications lets a
+      system ringtone be chosen
+- [ ] iPhone: works only after Add to Home Screen, not in a Safari tab
+
+If `diagnose:push` reports `sent: 1` but the phone shows nothing, the
+problem is on the device — notification permission, battery
+optimisation, or Do Not Disturb.
+
 ---
 
 ## Known limitations
@@ -180,8 +206,15 @@ during it.
    policy, which must never reach a browser.
 3. **No audit retention job.** `prune_audit_logs()` exists but nothing
    calls it. Waiting on Dav-Ric's retention policy.
-4. **Notifications reach the app only while it is open or
-   backgrounded.** A fully closed app receives nothing until reopened.
-   Web Push would fix this and needs a server to send from.
-5. **Custom alert sounds are per device**, stored in IndexedDB. They do
-   not follow a user between their phone and a desktop.
+4. **Push must be enabled on each device**, and on iPhone only after
+   the app has been added to the Home Screen. A device that has never
+   been enabled receives nothing while the app is closed.
+5. **Custom alert sounds are per device**, stored in IndexedDB, and
+   apply only while the app is open. The sound for a push to a closed
+   app is chosen by the operating system — on Android, under the app's
+   own notification settings.
+6. **Push is sent by the browser that caused the alert.** If that
+   device loses connection in the moment between the check-in saving
+   and the push being sent, the alert still waits in the app but
+   arrives late. Moving the send to a database webhook would remove
+   that gap.
