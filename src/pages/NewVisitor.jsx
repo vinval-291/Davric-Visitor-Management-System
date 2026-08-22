@@ -7,6 +7,7 @@ import { useExecutives } from '../lib/useExecutives.js'
 import { formatPhone, normalizePhone, isValidPhone } from '../lib/phone.js'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../lib/auth.jsx'
+import { sendPushFor } from '../lib/push.js'
 
 const EMPTY = {
   full_name: '',
@@ -109,6 +110,10 @@ export default function NewVisitor() {
       return
     }
     setCheckedIn(data)
+
+    // Wake the recipients' devices. Never throws: the alert row is
+    // already saved, so a failed push is untimely, not lost.
+    sendPushFor(data.id)
 
     // Who actually received the alert. Returns the PA(s) assigned to
     // the executive, or the super admins when none is assigned.

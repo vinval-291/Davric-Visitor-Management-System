@@ -100,6 +100,38 @@ self.addEventListener('fetch', (event) => {
 })
 
 /**
+ * A push from the server. This is the only path that reaches a phone
+ * whose app is closed: the operating system wakes the service worker,
+ * runs this handler, and shows the notification without the page ever
+ * being loaded.
+ *
+ * Chrome requires that every push shows something visible. Silently
+ * swallowing one costs the site its push permission, so there is
+ * always a fallback title and body.
+ */
+self.addEventListener('push', (event) => {
+  let payload = {}
+  try {
+    payload = event.data?.json() ?? {}
+  } catch {
+    payload = { body: event.data?.text() }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title ?? 'Dav-Ric VMS', {
+      body: payload.body ?? 'A visitor needs attention at reception.',
+      tag: payload.tag,
+      renotify: Boolean(payload.tag),
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      data: { url: payload.url ?? '/' },
+    }),
+  )
+})
+
+/**
  * Tapping a notification should land on the app, not a second copy of
  * it. An already-open window is focused and navigated; only if none
  * exists is a new one opened.

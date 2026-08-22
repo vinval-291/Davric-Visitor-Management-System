@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase.js'
 import { useAuth } from './auth.jsx'
+import { sendPushFor } from './push.js'
 
 const VISITOR_FIELDS = `
   id, full_name, organization, purpose, phone,
@@ -131,6 +132,8 @@ export function useNotifications({ onArrival } = {}) {
             n.visitor_id === visitorId ? { ...n, visitor: data } : n,
           ),
         )
+        // Reception's phone may be locked behind the desk.
+        sendPushFor(visitorId)
       }
       return null
     },

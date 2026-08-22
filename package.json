@@ -11,7 +11,8 @@
     "check:schema": "node --env-file=.env scripts/check-schema.mjs",
     "test:security": "node --env-file=.env scripts/security-test.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "diagnose:realtime": "node --env-file=.env scripts/diagnose-realtime.mjs"
+    "diagnose:realtime": "node --env-file=.env scripts/diagnose-realtime.mjs",
+    "vapid": "node scripts/generate-vapid.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

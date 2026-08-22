@@ -62,6 +62,7 @@ Supabase SQL Editor. They are written to be safe to re-run.
 | `0011_audit_grants.sql` | Makes audit tampering fail loudly |
 | `0012_admission_notification_type.sql` | New notification type — **run on its own** |
 | `0013_notify_desk_on_admission.sql` | Alerts reception when a PA sends a visitor up |
+| `0014_push_subscriptions.sql` | Devices registered for push |
 
 Then `supabase/seed.sql` for placeholder departments and executives.
 
@@ -78,6 +79,7 @@ Then `supabase/seed.sql` for placeholder departments and executives.
 | `npm run test:security` | Full role-based security suite (29 checks) |
 | `npm run icons` | Regenerate app icons from the logo |
 | `npm run diagnose:realtime` | Reproduce the PA→reception live update path |
+| `npm run vapid` | Generate the Web Push key pair (once, ever) |
 
 `test:security` needs the `TEST_*` credentials in `.env`. See
 `.env.example`. **Never put those in Vercel.**
@@ -186,24 +188,91 @@ one person changing the alert should not change it for everyone.
 
 ### When alerts actually reach someone
 
-| App state | Sound | Banner |
+| App state | Without push | With push enabled |
 |---|---|---|
-| Open and visible | yes | no — the alert card is on screen |
-| Open, in another tab or minimised | yes | yes, if notifications are allowed |
-| **Fully closed** | **no** | **no** |
+| Open and visible | in-app card and sound | same |
+| In another tab, desktop | banner and sound | same |
+| **Backgrounded on a phone** | **nothing** | **notification** |
+| **Fully closed** | **nothing** | **notification** |
 
-The last row is the honest limit of what a web app can do without a
-push server. Delivering an alert to a closed app needs **Web Push**:
-VAPID keys, a subscription stored per device, and a Supabase Edge
-Function to send from. That is a self-contained piece of work and a
-sensible first enhancement after the pilot — the notification is
-already created by a database trigger, so the send would hang off the
-same event.
+The two "nothing" rows are not bugs. A phone freezes a backgrounded
+app within seconds: JavaScript stops, the realtime socket closes, and
+no arrival can reach the page. A closed app has no socket at all.
+Anything that depends on the page being alive cannot work there.
 
-Note also that Android and iOS do not let a website choose the sound
-for a push notification delivered to a closed app; the operating system
-uses its own notification tone. The custom sound applies while the app
-is running, which is the case the PA dashboard is designed around.
+Web Push is delivered to the operating system instead, which wakes the
+service worker with the app shut. It is the only mechanism that
+reaches a PA with the phone in their pocket.
+
+Each person turns it on per device under **🔔 → Alert me when the app
+is closed**.
+
+**Sound for a push is chosen by the operating system, not by us.** On
+Android that is a feature: once push is enabled, the app gets its own
+entry under **Settings → Apps → Dav-Ric VMS → Notifications**, where
+any system ringtone can be chosen — including the preinstalled ones a
+website cannot otherwise reach. The in-app custom sound still applies
+while the app is open.
+
+On iPhone push requires the app to be **added to the Home Screen**
+(iOS 16.4+). A Safari tab is not eligible.
+
+---
+
+## Enabling push (one-time setup)
+
+### 1. Generate the keys
+
+```bash
+npm run vapid
+```
+
+Generate **once**. Regenerating invalidates every device already
+subscribed.
+
+### 2. Publish the public key
+
+Add to `.env` and to Vercel's environment variables:
+
+```
+VITE_VAPID_PUBLIC_KEY=<public key>
+```
+
+### 3. Set the Supabase secrets
+
+Dashboard → **Edge Functions → Secrets**, or:
+
+```bash
+supabase secrets set VAPID_PUBLIC_KEY=<public key>
+supabase secrets set VAPID_PRIVATE_KEY=<private key>
+supabase secrets set VAPID_SUBJECT=mailto:admin@davric.com
+```
+
+The private key is a credential. It never goes in `.env`, in Vercel,
+or in this repository.
+
+### 4. Deploy the function
+
+```bash
+supabase link --project-ref <your-project-ref>
+supabase functions deploy send-push
+```
+
+### 5. Run migration `0014`, redeploy the site, and enable it per device
+
+Each person opens **🔔 → Alert me when the app is closed** on every
+device they want alerted.
+
+### How the send is triggered
+
+The browser that causes an alert calls the function immediately after
+the database has written the notification rows. That browser is online
+by definition, so no database webhook is needed.
+
+The division of responsibility matters: the notification **row** is
+created by a database trigger and is guaranteed. The push is
+best-effort delivery on top. A failed push means a less timely alert,
+never a lost one — it is still waiting in the app when it is opened.
 
 ---
 
@@ -277,9 +346,8 @@ Properties worth preserving if you change anything:
 2. **Accounts are created in the Supabase dashboard**, not in the app.
 3. **No audit retention job.** `prune_audit_logs(keep_days)` exists but
    nothing calls it, pending Dav-Ric's retention policy.
-4. **Notifications are in-app only.** Alerts arrive while the app is
-   open or backgrounded, not when it is fully closed. See
-   "Notification sounds" above. Email, SMS and WhatsApp are listed as
+4. **Push must be enabled per device**, and on iPhone only after the
+   app is added to the Home Screen. Email, SMS and WhatsApp remain
    future enhancements.
 
 ---

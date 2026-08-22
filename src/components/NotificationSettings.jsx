@@ -14,6 +14,12 @@ import {
   systemNotify,
   notificationDiagnostics,
 } from '../lib/sound.js'
+import {
+  getPushState,
+  enablePush,
+  disablePush,
+  pushConfigured,
+} from '../lib/push.js'
 
 export default function NotificationSettings({ onClose }) {
   const [settings, setSettings] = useState(loadSettings)
@@ -25,6 +31,9 @@ export default function NotificationSettings({ onClose }) {
   const anyFileInput = useRef(null)
   const [diag, setDiag] = useState(null)
   const [testState, setTestState] = useState(null)
+  const [push, setPush] = useState('checking')
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState(null)
 
   useEffect(() => {
     saveSettings(settings)
@@ -32,7 +41,19 @@ export default function NotificationSettings({ onClose }) {
 
   useEffect(() => {
     notificationDiagnostics().then(setDiag)
+    getPushState().then(setPush)
   }, [permission])
+
+  async function togglePush() {
+    setPushBusy(true)
+    setPushError(null)
+    try {
+      setPush(push === 'on' ? await disablePush() : await enablePush())
+    } catch (err) {
+      setPushError(err.message)
+    }
+    setPushBusy(false)
+  }
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -385,6 +406,78 @@ export default function NotificationSettings({ onClose }) {
           )}
         </div>
 
+
+        {/* Push: the only thing that reaches a closed phone. */}
+        <div className="mt-4 rounded-xl bg-white px-4 py-3 ring-1 ring-steel-200">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="font-medium text-ink">
+                Alert me when the app is closed
+              </p>
+              <p className="mt-0.5 text-sm text-steel-500">
+                Sends the alert to this device through the phone itself, so it
+                arrives even with the app shut. Enable on each device you use.
+              </p>
+            </div>
+            {push === 'on' && (
+              <span className="shrink-0 rounded-full bg-inside-50 px-2.5 py-1 text-xs font-medium text-inside-700 ring-1 ring-inside-500/30">
+                On
+              </span>
+            )}
+          </div>
+
+          {push === 'unsupported' ? (
+            <p className="mt-3 text-sm text-steel-500">
+              This browser cannot receive them. On iPhone, add the app to your
+              Home Screen first — Safari tabs are not eligible.
+            </p>
+          ) : push === 'not-configured' ? (
+            <p className="mt-3 text-sm text-steel-500">
+              Not configured for this deployment yet.
+            </p>
+          ) : push === 'blocked' ? (
+            <p className="mt-3 text-sm text-brand-700">
+              Notifications are blocked for this site. Allow them in your
+              browser or phone settings, then reopen this panel.
+            </p>
+          ) : push === 'no-service-worker' ? (
+            <p className="mt-3 text-sm text-brand-700">
+              The app is not installed or the page needs reloading. Reload and
+              try again.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={togglePush}
+              disabled={pushBusy || push === 'checking'}
+              className={`mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:opacity-60 ${
+                push === 'on'
+                  ? 'bg-white text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50'
+                  : 'bg-brand-600 text-white hover:bg-brand-700'
+              }`}
+            >
+              {pushBusy
+                ? 'Working…'
+                : push === 'on'
+                  ? 'Turn off on this device'
+                  : 'Turn on for this device'}
+            </button>
+          )}
+
+          {pushError && (
+            <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+              {pushError}
+            </p>
+          )}
+
+          {push === 'on' && (
+            <p className="mt-2 text-xs text-steel-400">
+              Android lets you choose the sound for these under Settings →
+              Apps → Dav-Ric VMS → Notifications, including system ringtones.
+            </p>
+          )}
+        </div>
+
         {/* Diagnostics: separates "this device cannot show a
             notification" from "the alert never arrived". */}
         <details className="mt-4 rounded-xl bg-steel-50 px-4 py-3 ring-1 ring-steel-200">
@@ -440,9 +533,9 @@ export default function NotificationSettings({ onClose }) {
         </details>
 
         <p className="mt-4 text-xs text-steel-400">
-          Alerts arrive while the app is open or running in the background. If
-          the app is fully closed, the visitor still appears the moment it is
-          reopened.
+          {push === 'on'
+            ? 'Alerts reach this device whether the app is open, in the background or closed.'
+            : 'Without the setting above, alerts only arrive while the app is open — a phone freezes a backgrounded app within seconds.'}
         </p>
 
         <button
