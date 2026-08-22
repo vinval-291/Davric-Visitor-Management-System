@@ -2,12 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import AppShell from '../components/AppShell.jsx'
 import { useNotifications } from '../lib/useNotifications.js'
 import { clockTime, elapsed } from '../lib/time.js'
-import { chime } from '../lib/chime.js'
+import { playAlert, systemNotify, unlockAudio } from '../lib/sound.js'
 
 export default function PaDashboard() {
-  const [sound, setSound] = useState(
-    () => localStorage.getItem('vms.sound') !== 'off',
-  )
   // Re-render on a timer so "waiting 4 min" stays honest without a
   // refresh. Cheap: it only touches this component.
   const [, setTick] = useState(0)
@@ -16,32 +13,27 @@ export default function PaDashboard() {
     return () => clearInterval(id)
   }, [])
 
-  const onArrival = useCallback(() => {
-    if (localStorage.getItem('vms.sound') !== 'off') chime()
+  useEffect(unlockAudio, [])
+
+  const onArrival = useCallback((notification) => {
+    playAlert()
+    const v = notification?.visitor
+    systemNotify({
+      title: 'Visitor has arrived',
+      body: v
+        ? `${v.full_name}${v.organization ? ` (${v.organization})` : ''} is here to see ${v.executive_name_snapshot}`
+        : notification?.message,
+      tag: notification?.id,
+    })
   }, [])
 
   const { items, loading, error, unread, waiting, markRead, admit } =
     useNotifications({ onArrival })
 
-  function toggleSound() {
-    setSound((on) => {
-      localStorage.setItem('vms.sound', on ? 'off' : 'on')
-      return !on
-    })
-  }
-
   return (
     <AppShell
       title="Visitor notifications"
       subtitle="Alerts appear here the moment a visitor is registered at reception"
-      actions={
-        <button
-          onClick={toggleSound}
-          className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
-        >
-          {sound ? '🔔 Sound on' : '🔕 Sound off'}
-        </button>
-      }
     >
       <div className="mb-6 flex flex-wrap gap-3">
         <Stat label="Waiting in reception" value={waiting} accent={waiting > 0} />

@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(python -)",
-      "Bash(node --env-file=.env -e ' *)"
+      "Bash(node --env-file=.env -e ' *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e 'import\\(\"sharp\"\\).then\\(async \\({default:s}\\)=>{await s\\(\"public/icons/icon-192.png\"\\).resize\\({width:220,kernel:\"nearest\"}\\).png\\(\\).toFile\\(\"mark-preview.png\"\\);console.log\\(\"preview\"\\)}\\)')",
+      "Bash(node --check dist/sw.js)",
+      "Bash(node -e 'const m=require\\(\"./dist/manifest.webmanifest\"\\); *)",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"dist/sw.js\",\"utf8\"\\);console.log\\(\\(s.match\\(/\"revision\"/g\\)||[]\\).length,\"entries precached\"\\)')"
     ]
   }
 }

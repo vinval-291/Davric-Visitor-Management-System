@@ -1,7 +1,9 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth, ROLE_LABEL } from '../lib/auth.jsx'
 import { useIdleTimeout } from '../lib/useIdleTimeout.js'
+import NotificationSettings from './NotificationSettings.jsx'
+import { OfflineBar, UpdateBar, InstallButton } from './AppStatusBars.jsx'
 import Logo from './Logo.jsx'
 
 const NAV_BY_ROLE = {
@@ -24,10 +26,13 @@ export default function AppShell({ title, subtitle, actions, children }) {
 
   const handleTimeout = useCallback(() => signOut(), [signOut])
   const { secondsLeft } = useIdleTimeout(handleTimeout)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="min-h-full bg-steel-50">
       <div className="h-1.5 w-full bg-brand-500" />
+      <OfflineBar />
+      <UpdateBar />
 
       {secondsLeft !== null && (
         <div
@@ -64,7 +69,16 @@ export default function AppShell({ title, subtitle, actions, children }) {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <InstallButton className="hidden sm:inline-flex" />
+            <button
+              onClick={() => setSettingsOpen(true)}
+              title="Alert settings"
+              aria-label="Alert settings"
+              className="rounded-lg bg-white px-3 py-1.5 text-base text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+            >
+              🔔
+            </button>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium leading-tight text-ink">
                 {profile?.full_name}
@@ -101,6 +115,10 @@ export default function AppShell({ title, subtitle, actions, children }) {
         )}
         {children}
       </main>
+
+      {settingsOpen && (
+        <NotificationSettings onClose={() => setSettingsOpen(false)} />
+      )}
     </div>
   )
 }

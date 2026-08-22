@@ -130,6 +130,41 @@ The pilot will surface these whether or not you test them first.
 - [ ] Renaming a department does not rewrite past visit records
 - [ ] Deleting an executive leaves their name on past visits
 
+## 9. Installable app and alert sounds
+
+Must be done against the **deployed HTTPS URL**. Installation is not
+offered over plain HTTP.
+
+- [ ] Android Chrome: **Install app** appears and installs
+- [ ] Installed app opens with no browser address bar
+- [ ] The icon on the home screen is the D mark, not a white blob
+- [ ] Android: the icon is not letterboxed inside a white circle
+- [ ] Windows/Edge or Chrome: installs and opens in its own window
+- [ ] iPhone Safari: **Install app** shows the Add to Home Screen steps
+- [ ] iPhone: added to Home Screen, opens without Safari chrome
+- [ ] App shortcuts (long-press the icon) offer New visitor / Alerts
+- [ ] Turn off wi-fi and reopen the installed app: it loads and shows
+      the black "No internet connection" bar, not a browser error
+- [ ] Deploy a change, reopen: the update banner appears, and
+      **Update now** reloads into the new version
+
+### Alert sounds
+
+- [ ] 🔔 opens alert settings
+- [ ] Each of the four presets plays on **Play**
+- [ ] Choosing a preset plays it immediately
+- [ ] A sound file can be chosen from the device and plays
+- [ ] A file over 2 MB is rejected with a clear message
+- [ ] A non-audio file is rejected
+- [ ] The custom sound survives a page reload
+- [ ] **Remove** clears it and falls back to Chime
+- [ ] Volume changes are audible and persist
+- [ ] Turning sound off silences a real arrival
+- [ ] **Allow notifications** requests permission
+- [ ] With the tab hidden, a real arrival raises a system banner
+- [ ] With the tab visible, no banner appears (the card is enough)
+- [ ] Settings are per device: a second device keeps its own
+
 ---
 
 ## Known limitations
@@ -145,5 +180,8 @@ during it.
    policy, which must never reach a browser.
 3. **No audit retention job.** `prune_audit_logs()` exists but nothing
    calls it. Waiting on Dav-Ric's retention policy.
-4. **Notifications are in-app only.** Email, SMS and WhatsApp are
-   listed as future enhancements in section 19.
+4. **Notifications reach the app only while it is open or
+   backgrounded.** A fully closed app receives nothing until reopened.
+   Web Push would fix this and needs a server to send from.
+5. **Custom alert sounds are per device**, stored in IndexedDB. They do
+   not follow a user between their phone and a desktop.
