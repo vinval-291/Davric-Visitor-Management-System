@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   PRESETS,
+  REPEAT_OPTIONS,
   MAX_SOUND_BYTES,
   loadSettings,
   saveSettings,
@@ -19,6 +20,7 @@ export default function NotificationSettings({ onClose }) {
     canNotify() ? Notification.permission : 'unsupported',
   )
   const fileInput = useRef(null)
+  const anyFileInput = useRef(null)
 
   useEffect(() => {
     saveSettings(settings)
@@ -37,8 +39,14 @@ export default function NotificationSettings({ onClose }) {
     if (!file) return
     setError(null)
 
-    if (!file.type.startsWith('audio/')) {
-      return setError('That file is not an audio file.')
+    // Android's document provider often reports a ringtone with an
+    // empty or generic MIME type, so the extension is checked too
+    // rather than rejecting a perfectly good file.
+    const looksAudio =
+      file.type.startsWith('audio/') ||
+      /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|mid|midi)$/i.test(file.name)
+    if (!looksAudio) {
+      return setError('That does not look like an audio file.')
     }
     if (file.size > MAX_SOUND_BYTES) {
       return setError(
@@ -208,6 +216,14 @@ export default function NotificationSettings({ onClose }) {
                     Remove
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => anyFileInput.current?.click()}
+                  className="rounded-lg px-2 py-2 text-sm font-medium text-steel-500 underline underline-offset-2 transition hover:text-steel-800"
+                >
+                  Can't find your ringtones?
+                </button>
+
                 <input
                   ref={fileInput}
                   type="file"
@@ -215,11 +231,50 @@ export default function NotificationSettings({ onClose }) {
                   onChange={handleFile}
                   className="hidden"
                 />
+                {/* No accept filter: Android shows the media library for
+                    audio/* and hides the file browser, which is where
+                    ringtone files actually live. */}
+                <input
+                  ref={anyFileInput}
+                  type="file"
+                  onChange={handleFile}
+                  className="hidden"
+                />
               </div>
 
+              <details className="mt-3 text-xs text-steel-500">
+                <summary className="cursor-pointer font-medium text-steel-600">
+                  Using a ringtone from your phone
+                </summary>
+                <p className="mt-2">
+                  A website cannot open your phone's ringtone list — only
+                  installed apps can do that. You can still choose a ringtone
+                  file if you can reach it in storage:
+                </p>
+                <ol className="mt-2 list-decimal space-y-1 pl-4">
+                  <li>
+                    Tap <strong>Can't find your ringtones?</strong> above
+                  </li>
+                  <li>
+                    In the picker choose <strong>Browse</strong> or{' '}
+                    <strong>Files</strong>, not Music or Audio
+                  </li>
+                  <li>
+                    Go to <strong>Internal storage</strong> →{' '}
+                    <strong>Ringtones</strong> or{' '}
+                    <strong>Notifications</strong>
+                  </li>
+                </ol>
+                <p className="mt-2">
+                  Ringtones that came preinstalled with the phone live in
+                  protected system storage and cannot be opened this way. Ones
+                  you added or downloaded yourself usually can.
+                </p>
+              </details>
+
               <p className="mt-2 text-xs text-steel-400">
-                MP3, WAV, OGG or M4A, up to 2 MB. Stored on this device only —
-                set it again on each device you use.
+                Up to 2 MB. Stored on this device only — set it again on each
+                device you use.
               </p>
             </div>
           </div>
@@ -229,6 +284,32 @@ export default function NotificationSettings({ onClose }) {
               {error}
             </p>
           )}
+
+          <div className="mt-5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-steel-500">
+              Keep sounding while someone waits
+            </span>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {REPEAT_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => update({ repeatSeconds: option.value })}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    settings.repeatSeconds === option.value
+                      ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-300'
+                      : 'text-steel-600 ring-1 ring-steel-200 hover:bg-steel-50'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-steel-400">
+              Sounds again until the visitor is sent up, so an alert missed
+              during a call is not missed for good.
+            </p>
+          </div>
 
           <label className="mt-5 block">
             <span className="text-xs font-semibold uppercase tracking-wider text-steel-500">

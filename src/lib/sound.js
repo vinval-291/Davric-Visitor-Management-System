@@ -28,7 +28,17 @@ export const PRESETS = {
   bell: { label: 'Bell', description: 'Brighter, carries further' },
   ping: { label: 'Ping', description: 'Single short note' },
   alert: { label: 'Alert', description: 'Three notes, hard to miss' },
+  ring: { label: 'Ring', description: 'Like a phone ringing' },
+  doorbell: { label: 'Doorbell', description: 'Two-tone, ding-dong' },
 }
+
+/** How often to sound again while someone is still waiting downstairs. */
+export const REPEAT_OPTIONS = [
+  { value: 0, label: 'Once' },
+  { value: 20, label: 'Every 20 seconds' },
+  { value: 45, label: 'Every 45 seconds' },
+  { value: 90, label: 'Every 90 seconds' },
+]
 
 export const DEFAULT_SETTINGS = {
   enabled: true,
@@ -36,6 +46,7 @@ export const DEFAULT_SETTINGS = {
   volume: 0.7,
   customName: null,
   systemNotifications: true,
+  repeatSeconds: 0,
 }
 
 export function loadSettings() {
@@ -127,6 +138,18 @@ const TONES = {
     [987.77, 0, 0.22],
     [987.77, 0.22, 0.22],
     [1318.51, 0.44, 0.5],
+  ],
+  // Two alternating tones over two cycles: the cadence a phone uses,
+  // which is what the ear actually recognises as "ringing".
+  ring: [
+    [800, 0, 0.34],
+    [1000, 0.4, 0.34],
+    [800, 0.95, 0.34],
+    [1000, 1.35, 0.34],
+  ],
+  doorbell: [
+    [659.25, 0, 0.65],
+    [523.25, 0.45, 1.0],
   ],
 }
 

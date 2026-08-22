@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import AppShell from '../components/AppShell.jsx'
 import { useNotifications } from '../lib/useNotifications.js'
 import { clockTime, elapsed } from '../lib/time.js'
-import { playAlert, systemNotify, unlockAudio } from '../lib/sound.js'
+import { playAlert, systemNotify, unlockAudio, loadSettings } from '../lib/sound.js'
 
 export default function PaDashboard() {
   // Re-render on a timer so "waiting 4 min" stays honest without a
@@ -29,6 +29,16 @@ export default function PaDashboard() {
 
   const { items, loading, error, unread, waiting, markRead, admit } =
     useNotifications({ onArrival })
+
+  // Sound again at the chosen interval while anyone is still waiting
+  // downstairs. A PA on a call misses the first alert easily, and the
+  // visitor has no way of knowing whether anybody was told.
+  useEffect(() => {
+    const { repeatSeconds } = loadSettings()
+    if (!repeatSeconds || waiting === 0) return
+    const id = setInterval(() => playAlert(), repeatSeconds * 1000)
+    return () => clearInterval(id)
+  }, [waiting])
 
   return (
     <AppShell
