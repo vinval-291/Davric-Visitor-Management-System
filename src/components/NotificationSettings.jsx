@@ -11,6 +11,8 @@ import {
   playAlert,
   canNotify,
   requestNotificationPermission,
+  systemNotify,
+  notificationDiagnostics,
 } from '../lib/sound.js'
 
 export default function NotificationSettings({ onClose }) {
@@ -21,10 +23,16 @@ export default function NotificationSettings({ onClose }) {
   )
   const fileInput = useRef(null)
   const anyFileInput = useRef(null)
+  const [diag, setDiag] = useState(null)
+  const [testState, setTestState] = useState(null)
 
   useEffect(() => {
     saveSettings(settings)
   }, [settings])
+
+  useEffect(() => {
+    notificationDiagnostics().then(setDiag)
+  }, [permission])
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -377,6 +385,60 @@ export default function NotificationSettings({ onClose }) {
           )}
         </div>
 
+        {/* Diagnostics: separates "this device cannot show a
+            notification" from "the alert never arrived". */}
+        <details className="mt-4 rounded-xl bg-steel-50 px-4 py-3 ring-1 ring-steel-200">
+          <summary className="cursor-pointer text-sm font-medium text-steel-700">
+            Notifications not appearing?
+          </summary>
+
+          <button
+            type="button"
+            onClick={async () => {
+              setTestState('Switch to another app now…')
+              setTimeout(async () => {
+                const result = await systemNotify({
+                  title: 'Test notification',
+                  body: 'If you can see this, notifications work on this device.',
+                  tag: 'vms-test',
+                  force: true,
+                })
+                setTestState(result ?? 'sent')
+              }, 5000)
+            }}
+            className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+          >
+            Send a test notification in 5 seconds
+          </button>
+          <p className="mt-1.5 text-xs text-steel-500">
+            Press this, then switch to another app or lock the phone. The
+            notification should appear in your notification shade.
+          </p>
+          {testState && (
+            <p className="mt-2 rounded-lg bg-white px-3 py-2 text-xs text-steel-700 ring-1 ring-steel-200">
+              {testState}
+            </p>
+          )}
+
+          {diag && (
+            <dl className="mt-3 space-y-1 text-xs">
+              <Diag label="Permission" value={diag.permission} good={diag.permission === 'granted'} />
+              <Diag label="Secure (HTTPS)" value={String(diag.secureContext)} good={diag.secureContext} />
+              <Diag label="Service worker" value={diag.serviceWorker} good={diag.serviceWorker === 'active'} />
+              <Diag label="Controlling page" value={String(diag.controlling)} good={diag.controlling} />
+              <Diag label="Installed app" value={String(diag.standalone)} good={diag.standalone} />
+              <Diag label="Build" value={diag.build} good />
+            </dl>
+          )}
+
+          <p className="mt-3 text-xs text-steel-500">
+            On a phone, a backgrounded app is frozen by the operating system
+            after a short time and stops receiving live updates. A test that
+            works but a real arrival that does not usually means the app was
+            asleep, not that notifications are broken.
+          </p>
+        </details>
+
         <p className="mt-4 text-xs text-steel-400">
           Alerts arrive while the app is open or running in the background. If
           the app is fully closed, the visitor still appears the moment it is
@@ -390,6 +452,19 @@ export default function NotificationSettings({ onClose }) {
           Done
         </button>
       </div>
+    </div>
+  )
+}
+
+function Diag({ label, value, good }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <dt className="text-steel-500">{label}</dt>
+      <dd
+        className={`font-mono ${good ? 'text-inside-700' : 'text-brand-700'}`}
+      >
+        {value}
+      </dd>
     </div>
   )
 }

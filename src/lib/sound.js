@@ -237,11 +237,14 @@ export async function requestNotificationPermission() {
  * This still requires the app to be open or backgrounded. Reaching a
  * fully closed app needs Web Push. See README.
  */
-export async function systemNotify({ title, body, tag, url = '/' }) {
+export async function systemNotify({ title, body, tag, url = '/', force = false }) {
   const settings = loadSettings()
-  if (!settings.systemNotifications) return
-  if (!canNotify() || Notification.permission !== 'granted') return
-  if (typeof document !== 'undefined' && !document.hidden) return
+  if (!force && !settings.systemNotifications) return
+  if (!canNotify() || Notification.permission !== 'granted') {
+    return 'permission not granted'
+  }
+  // A test needs to fire while the tester is looking at the screen.
+  if (!force && typeof document !== 'undefined' && !document.hidden) return
 
   const options = {
     body,
@@ -258,10 +261,10 @@ export async function systemNotify({ title, body, tag, url = '/' }) {
     const registration = await navigator.serviceWorker?.ready
     if (registration?.showNotification) {
       await registration.showNotification(title, options)
-      return
+      return 'shown via service worker'
     }
-  } catch {
-    /* fall through to the constructor */
+  } catch (err) {
+    if (force) console.warn('service worker notification failed', err)
   }
 
   try {
@@ -270,7 +273,37 @@ export async function systemNotify({ title, body, tag, url = '/' }) {
       window.focus()
       notification.close()
     }
-  } catch {
-    /* No notification support. The in-app alert still fires. */
+    return 'shown via Notification constructor'
+  } catch (err) {
+    return `failed: ${err.message}`
   }
+}
+
+/** Everything a phone can tell us about why an alert did not appear. */
+export async function notificationDiagnostics() {
+  const out = {
+    permission: canNotify() ? Notification.permission : 'unsupported',
+    secureContext: window.isSecureContext,
+    standalone:
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true,
+    serviceWorker: 'unsupported',
+    controlling: false,
+    build: typeof __BUILD_STAMP__ === 'string' ? __BUILD_STAMP__ : 'unknown',
+  }
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+      out.serviceWorker = registration
+        ? registration.active
+          ? 'active'
+          : 'registered, not active'
+        : 'not registered'
+      out.controlling = Boolean(navigator.serviceWorker.controller)
+    } catch {
+      out.serviceWorker = 'error'
+    }
+  }
+  return out
 }
