@@ -17,7 +17,8 @@
     "sb:login": "supabase login",
     "sb:link": "supabase link --project-ref zqkbgturnbezukrcoqnl",
     "push:deploy": "supabase functions deploy send-push",
-    "push:logs": "supabase functions logs send-push"
+    "push:logs": "supabase functions logs send-push",
+    "diagnose:push": "node --env-file=.env scripts/diagnose-push.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
