@@ -19,6 +19,7 @@ import {
   enablePush,
   disablePush,
   pushConfigured,
+  pushDebug,
 } from '../lib/push.js'
 
 export default function NotificationSettings({ onClose }) {
@@ -50,9 +51,17 @@ export default function NotificationSettings({ onClose }) {
     try {
       setPush(push === 'on' ? await disablePush() : await enablePush())
     } catch (err) {
-      setPushError(err.message)
+      // The technical state is appended so a failure on someone
+      // else's phone can be diagnosed without having the phone.
+      setPushError(`${err.message}
+
+${await pushDebug()}`)
+    } finally {
+      // In a finally block on purpose: this previously sat after the
+      // try/catch, so a promise that never settled left the button
+      // saying "Working..." for ever.
+      setPushBusy(false)
     }
-    setPushBusy(false)
   }
 
   useEffect(() => {
@@ -465,7 +474,7 @@ export default function NotificationSettings({ onClose }) {
           )}
 
           {pushError && (
-            <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+            <p className="mt-2 whitespace-pre-line rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
               {pushError}
             </p>
           )}

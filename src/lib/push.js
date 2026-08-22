@@ -36,6 +36,47 @@ function toUint8Array(base64url) {
   return Uint8Array.from(binary, (c) => c.charCodeAt(0))
 }
 
+/**
+ * Bounds a promise that can otherwise hang forever.
+ *
+ * navigator.serviceWorker.ready never rejects -- if registration is
+ * stuck it simply never settles. pushManager.subscribe() behaves the
+ * same way when the device cannot reach its push service. Without a
+ * timeout the interface sits on "Working..." with nothing to report,
+ * which tells the user less than an error would.
+ */
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message)), ms),
+    ),
+  ])
+}
+
+/** A registration that exists but is still installing is not usable. */
+async function activeRegistration() {
+  const registration = await withTimeout(
+    navigator.serviceWorker.getRegistration(),
+    5000,
+    'Could not read the service worker. Reload the page and try again.',
+  )
+
+  if (!registration) {
+    throw new Error(
+      'The app is not fully installed on this device yet. Reload the page, wait a moment, then try again.',
+    )
+  }
+
+  if (registration.active) return registration
+
+  return withTimeout(
+    navigator.serviceWorker.ready,
+    10000,
+    'The app is still starting up in the background. Close it completely, reopen it, and try again.',
+  )
+}
+
 export async function getPushState() {
   if (!pushSupported()) return 'unsupported'
   if (!pushConfigured) return 'not-configured'
@@ -48,42 +89,89 @@ export async function getPushState() {
   return subscription ? 'on' : 'off'
 }
 
+/** Human-readable reason, used when enabling fails. */
+export async function pushDebug() {
+  const parts = []
+  parts.push(`permission=${canNotify() ? Notification.permission : 'n/a'}`)
+  parts.push(`configured=${pushConfigured}`)
+  try {
+    const reg = await navigator.serviceWorker.getRegistration()
+    parts.push(
+      `sw=${reg ? (reg.active ? 'active' : reg.installing ? 'installing' : 'waiting') : 'none'}`,
+    )
+    parts.push(`controller=${Boolean(navigator.serviceWorker.controller)}`)
+  } catch {
+    parts.push('sw=error')
+  }
+  return parts.join(' · ')
+}
+
 export async function enablePush() {
   if (!pushSupported()) throw new Error('This browser cannot receive push alerts.')
   if (!pushConfigured) {
     throw new Error('Push is not configured for this deployment.')
   }
 
-  const permission = await Notification.requestPermission()
+  const permission = await withTimeout(
+    Notification.requestPermission(),
+    60000,
+    'No answer to the notification request.',
+  )
   if (permission !== 'granted') {
-    throw new Error('Notifications were not allowed.')
+    throw new Error(
+      permission === 'denied'
+        ? 'Notifications are blocked for this site. Allow them in your phone or browser settings, then try again.'
+        : 'Notifications were not allowed.',
+    )
   }
 
-  const registration = await navigator.serviceWorker.ready
+  const registration = await activeRegistration()
 
   // Reuse an existing subscription rather than creating a second one
   // for the same browser, which would deliver every alert twice.
-  const subscription =
-    (await registration.pushManager.getSubscription()) ??
-    (await registration.pushManager.subscribe({
-      userVisibleOnly: true, // required by Chrome: no silent pushes
-      applicationServerKey: toUint8Array(VAPID_PUBLIC_KEY),
-    }))
+  let subscription = await registration.pushManager.getSubscription()
+
+  if (!subscription) {
+    let key
+    try {
+      key = toUint8Array(VAPID_PUBLIC_KEY)
+    } catch {
+      throw new Error('The push key for this deployment is malformed.')
+    }
+    if (key.length !== 65) {
+      throw new Error(
+        `The push key for this deployment is the wrong length (${key.length}, expected 65). Check VITE_VAPID_PUBLIC_KEY in Vercel.`,
+      )
+    }
+
+    subscription = await withTimeout(
+      registration.pushManager.subscribe({
+        userVisibleOnly: true, // required by Chrome: no silent pushes
+        applicationServerKey: key,
+      }),
+      25000,
+      'The phone could not reach its push service. Check the connection and try again.',
+    )
+  }
 
   const raw = subscription.toJSON()
   const { data: session } = await supabase.auth.getUser()
   if (!session?.user) throw new Error('Sign in before enabling alerts.')
 
-  const { error } = await supabase.from('push_subscriptions').upsert(
-    {
-      user_id: session.user.id,
-      endpoint: raw.endpoint,
-      p256dh: raw.keys.p256dh,
-      auth: raw.keys.auth,
-      user_agent: navigator.userAgent.slice(0, 300),
-      last_used_at: new Date().toISOString(),
-    },
-    { onConflict: 'endpoint' },
+  const { error } = await withTimeout(
+    supabase.from('push_subscriptions').upsert(
+      {
+        user_id: session.user.id,
+        endpoint: raw.endpoint,
+        p256dh: raw.keys.p256dh,
+        auth: raw.keys.auth,
+        user_agent: navigator.userAgent.slice(0, 300),
+        last_used_at: new Date().toISOString(),
+      },
+      { onConflict: 'endpoint' },
+    ),
+    15000,
+    'Saving this device timed out. Check the connection and try again.',
   )
 
   if (error) throw new Error(error.message)
@@ -91,7 +179,11 @@ export async function enablePush() {
 }
 
 export async function disablePush() {
-  const registration = await navigator.serviceWorker.getRegistration()
+  const registration = await withTimeout(
+    navigator.serviceWorker.getRegistration(),
+    5000,
+    'Could not read the service worker.',
+  )
   const subscription = await registration?.pushManager.getSubscription()
   if (!subscription) return 'off'
 
