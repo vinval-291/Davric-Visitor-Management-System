@@ -85,6 +85,7 @@ Then `supabase/seed.sql` for placeholder departments and executives.
 `.env.example`. **Never put those in Vercel.**
 
 Manual test plan: [TESTING.md](TESTING.md).
+Pilot plan and training: [PILOT.md](PILOT.md).
 
 ---
 
