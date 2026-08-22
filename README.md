@@ -60,6 +60,8 @@ Supabase SQL Editor. They are written to be safe to re-run.
 | `0009_reports.sql` | Report summary function |
 | `0010_audit_logging.sql` | Audit triggers |
 | `0011_audit_grants.sql` | Makes audit tampering fail loudly |
+| `0012_admission_notification_type.sql` | New notification type — **run on its own** |
+| `0013_notify_desk_on_admission.sql` | Alerts reception when a PA sends a visitor up |
 
 Then `supabase/seed.sql` for placeholder departments and executives.
 
@@ -75,6 +77,7 @@ Then `supabase/seed.sql` for placeholder departments and executives.
 | `npm run check:schema` | Does any table leak data to an anonymous visitor? |
 | `npm run test:security` | Full role-based security suite (29 checks) |
 | `npm run icons` | Regenerate app icons from the logo |
+| `npm run diagnose:realtime` | Reproduce the PA→reception live update path |
 
 `test:security` needs the `TEST_*` credentials in `.env`. See
 `.env.example`. **Never put those in Vercel.**

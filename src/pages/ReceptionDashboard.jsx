@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AppShell from '../components/AppShell.jsx'
 import VisitorDetail from '../components/VisitorDetail.jsx'
+import DeskAlerts from '../components/DeskAlerts.jsx'
 import { useVisitors } from '../lib/useVisitors.js'
 import { smartTime, elapsed, isBeforeToday } from '../lib/time.js'
 import { normalizePhone } from '../lib/phone.js'
@@ -63,6 +64,8 @@ export default function ReceptionDashboard() {
         </Link>
       }
     >
+      <DeskAlerts />
+
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
           label="Currently inside"

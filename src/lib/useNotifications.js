@@ -9,7 +9,7 @@ const VISITOR_FIELDS = `
   check_out_time, status
 `
 
-const SELECT = `id, message, is_read, read_at, created_at, visitor_id,
+const SELECT = `id, message, type, is_read, read_at, created_at, visitor_id,
                 visitor:visitors(${VISITOR_FIELDS})`
 
 /**
