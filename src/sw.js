@@ -25,10 +25,27 @@ const VERSION = MANIFEST.map((e) => e.revision ?? e.url ?? e)
 const CACHE = `davric-vms-${VERSION}`
 
 self.addEventListener('install', (event) => {
+  // Each asset is cached individually and failures are tolerated.
+  //
+  // cache.addAll() rejects the whole batch if a single request fails,
+  // which fails the install, so the worker never activates, never
+  // claims the page, and the browser eventually discards the
+  // registration -- leaving an app that reports "not installed" no
+  // matter how many times it is reloaded. One missing file must not
+  // cost the entire offline shell.
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(ASSETS))
+      .then(async (cache) => {
+        const results = await Promise.allSettled(
+          ASSETS.map((asset) => cache.add(asset)),
+        )
+        const failed = results.filter((r) => r.status === 'rejected').length
+        if (failed) {
+          console.warn(`[sw] ${failed}/${ASSETS.length} assets could not be cached`)
+        }
+      })
+      .catch((err) => console.warn('[sw] cache open failed', err))
       .then(() => self.skipWaiting()),
   )
 })

@@ -292,6 +292,8 @@ export async function notificationDiagnostics() {
     controlling: false,
     build: typeof __BUILD_STAMP__ === 'string' ? __BUILD_STAMP__ : 'unknown',
     registration: swStatus().state,
+    scope: '—',
+    registrations: 0,
     registrationError: swStatus().error,
   }
 
@@ -301,9 +303,16 @@ export async function notificationDiagnostics() {
       out.serviceWorker = registration
         ? registration.active
           ? 'active'
-          : 'registered, not active'
+          : registration.installing
+            ? 'installing'
+            : registration.waiting
+              ? 'waiting'
+              : 'registered, no worker'
         : 'not registered'
       out.controlling = Boolean(navigator.serviceWorker.controller)
+      out.scope = registration?.scope ?? '—'
+      const all = await navigator.serviceWorker.getRegistrations()
+      out.registrations = all.length
     } catch {
       out.serviceWorker = 'error'
     }

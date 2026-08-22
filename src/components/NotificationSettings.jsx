@@ -449,11 +449,6 @@ ${await pushDebug()}`)
               Notifications are blocked for this site. Allow them in your
               browser or phone settings, then reopen this panel.
             </p>
-          ) : push === 'no-service-worker' ? (
-            <p className="mt-3 text-sm text-brand-700">
-              The app is not installed or the page needs reloading. Reload and
-              try again.
-            </p>
           ) : (
             <button
               type="button"
@@ -469,7 +464,9 @@ ${await pushDebug()}`)
                 ? 'Working…'
                 : push === 'on'
                   ? 'Turn off on this device'
-                  : 'Turn on for this device'}
+                  : push === 'no-service-worker'
+                    ? 'Set up and turn on for this device'
+                    : 'Turn on for this device'}
             </button>
           )}
 
@@ -529,6 +526,8 @@ ${await pushDebug()}`)
               <Diag label="Service worker" value={diag.serviceWorker} good={diag.serviceWorker === 'active'} />
               <Diag label="Controlling page" value={String(diag.controlling)} good={diag.controlling} />
               <Diag label="Installed app" value={String(diag.standalone)} good={diag.standalone} />
+              <Diag label="Registrations" value={String(diag.registrations)} good={diag.registrations > 0} />
+              <Diag label="Scope" value={diag.scope} good={diag.scope !== '—'} />
               <Diag
                 label="Registration"
                 value={diag.registration}
