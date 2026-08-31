@@ -4,6 +4,7 @@ import { AuthProvider, useAuth, HOME_FOR_ROLE } from './lib/auth.jsx'
 import ProtectedRoute, { NoAccess } from './components/ProtectedRoute.jsx'
 import Logo from './components/Logo.jsx'
 import Login from './pages/Login.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 
 /**
  * Every screen except the login is loaded on demand.
@@ -28,6 +29,11 @@ export default function App() {
         <Suspense fallback={<Splash />}>
           <Routes>
             <Route path="/login" element={<Login />} />
+
+            {/* Deliberately outside ProtectedRoute: the recovery link
+                is the credential, and the page handles a missing or
+                expired one itself. */}
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             <Route
               path="/reception"

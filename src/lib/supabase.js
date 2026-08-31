@@ -24,6 +24,11 @@ export const supabase = createClient(url, anonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    // Required for password recovery. The link in a reset email carries
+    // its credentials in the URL, and with this off they are ignored --
+    // the user lands on the reset page with no way to prove who they
+    // are. It was off originally because nothing but password sign-in
+    // was in use.
+    detectSessionInUrl: true,
   },
 })

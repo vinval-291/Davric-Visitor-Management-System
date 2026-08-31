@@ -4,6 +4,7 @@ import { useAuth, ROLE_LABEL } from '../lib/auth.jsx'
 import { useIdleTimeout } from '../lib/useIdleTimeout.js'
 import NotificationSettings from './NotificationSettings.jsx'
 import AlertSetupGuide from './AlertSetupGuide.jsx'
+import AccountDialog from './AccountDialog.jsx'
 import { getPushState, pushSupported, pushConfigured } from '../lib/push.js'
 import { OfflineBar, UpdateBar, InstallButton } from './AppStatusBars.jsx'
 import Logo from './Logo.jsx'
@@ -41,6 +42,7 @@ export default function AppShell({ title, subtitle, actions, children }) {
   const { secondsLeft } = useIdleTimeout(handleTimeout)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [pushState, setPushState] = useState('checking')
   const [dismissed, setDismissed] = useState(
     () => Number(localStorage.getItem(SETUP_SNOOZED) || 0) > Date.now(),
@@ -118,19 +120,26 @@ export default function AppShell({ title, subtitle, actions, children }) {
             >
               🔔
             </button>
-            <div className="hidden text-right lg:block">
-              <p className="text-sm font-medium leading-tight text-ink">
-                {profile?.full_name}
-              </p>
-              <p className="text-xs leading-tight text-steel-500">
-                {ROLE_LABEL[role] ?? 'No role'}
-              </p>
-            </div>
+            {/* Name, role, password and sign-out all live behind one
+                control. On a phone the header has no room to show
+                them, and a password change needs somewhere to live
+                that is not the alert settings. */}
             <button
-              onClick={signOut}
-              className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+              onClick={() => setAccountOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-left ring-1 ring-steel-300 transition hover:bg-steel-50"
             >
-              Sign out
+              <span className="text-base leading-none" aria-hidden="true">
+                &#128100;
+              </span>
+              <span className="hidden lg:block">
+                <span className="block text-sm font-medium leading-tight text-ink">
+                  {profile?.full_name}
+                </span>
+                <span className="block text-xs leading-tight text-steel-500">
+                  {ROLE_LABEL[role] ?? 'No role'}
+                </span>
+              </span>
+              <span className="sr-only">Your account</span>
             </button>
           </div>
         </div>
@@ -209,6 +218,8 @@ export default function AppShell({ title, subtitle, actions, children }) {
       )}
 
       {guideOpen && <AlertSetupGuide onClose={() => setGuideOpen(false)} />}
+
+      {accountOpen && <AccountDialog onClose={() => setAccountOpen(false)} />}
     </div>
   )
 }

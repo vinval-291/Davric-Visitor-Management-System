@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useTable } from '../../lib/useTable.js'
+import { sendResetEmail } from '../../lib/password.js'
 import { useAuth, ROLE_LABEL } from '../../lib/auth.jsx'
 import { Panel, ErrorNote, Button, Table, ActivePill, inputClass } from './ui.jsx'
 
@@ -6,6 +8,16 @@ const ROLES = ['super_admin', 'receptionist', 'pa', 'executive']
 
 export default function Users() {
   const { user } = useAuth()
+  const [sentTo, setSentTo] = useState(null)
+  const [sending, setSending] = useState(null)
+
+  async function sendReset(profile) {
+    setSending(profile.id)
+    await sendResetEmail(profile.email)
+    setSending(null)
+    setSentTo(profile.id)
+  }
+
   const departments = useTable('departments', { order: 'name' })
   const { items, loading, error, setError, update } = useTable('profiles', {
     select: 'id, full_name, email, phone, role, department_id, is_active, created_at',
@@ -42,7 +54,7 @@ export default function Users() {
         <p className="py-6 text-center text-steel-400">Loading…</p>
       ) : (
         <Table
-          head={['Name', 'Email', 'Role', 'Department', 'Status', '']}
+          head={['Name', 'Email', 'Role', 'Department', 'Status', '', '']}
           empty={items.length === 0 ? 'No users yet.' : null}
         >
           {items.map((p) => {
@@ -99,6 +111,19 @@ export default function Users() {
                 </td>
                 <td className="px-3 py-2.5">
                   <ActivePill active={p.is_active} />
+                </td>
+                <td className="px-3 py-2.5">
+                  <Button
+                    variant="ghost"
+                    disabled={sending === p.id || !p.email}
+                    onClick={() => sendReset(p)}
+                  >
+                    {sending === p.id
+                      ? 'Sending…'
+                      : sentTo === p.id
+                        ? 'Link sent'
+                        : 'Reset password'}
+                  </Button>
                 </td>
                 <td className="px-3 py-2.5 text-right">
                   <Button
