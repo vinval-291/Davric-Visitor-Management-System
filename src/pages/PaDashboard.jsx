@@ -80,7 +80,7 @@ export default function PaDashboard() {
           : 'Alerts appear here the moment a visitor is registered at reception'
       }
     >
-      <div className="mb-6 flex flex-wrap gap-3">
+      <div className="mb-6 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <Stat label="Waiting in reception" value={waiting} accent={waiting > 0} />
         <Stat label="Unread alerts" value={unread} />
         <Stat label="Total alerts" value={items.length} />
@@ -117,20 +117,22 @@ export default function PaDashboard() {
 function Stat({ label, value, accent }) {
   return (
     <div
-      className={`rounded-xl px-5 py-3 ring-1 ${
+      className={`rounded-xl px-3 py-3 ring-1 sm:px-5 ${
         accent
           ? 'bg-brand-50 ring-brand-200'
           : 'bg-white ring-steel-200'
       }`}
     >
       <p
-        className={`text-2xl font-semibold ${
+        className={`text-2xl font-semibold tabular-nums ${
           accent ? 'text-brand-700' : 'text-ink'
         }`}
       >
         {value}
       </p>
-      <p className="text-xs font-medium text-steel-500">{label}</p>
+      <p className="text-xs font-medium leading-tight text-steel-500">
+        {label}
+      </p>
     </div>
   )
 }

@@ -104,7 +104,10 @@ export function InstallButton({ className = '' }) {
         onClick={install}
         className={`rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50 ${className}`}
       >
-        Install app
+        {/* "Install app" costs the header a third of its width on a
+            narrow phone, where it sits beside two other controls. */}
+        <span className="sm:hidden">Install</span>
+        <span className="hidden sm:inline">Install app</span>
       </button>
 
       {showIosHelp && (

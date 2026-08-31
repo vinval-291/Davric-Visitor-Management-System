@@ -160,29 +160,34 @@ export default function AppShell({ title, subtitle, actions, children }) {
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {needsSetup && !dismissed && (
-          <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl bg-brand-50 px-5 py-4 ring-1 ring-brand-200">
-            <span className="text-2xl leading-none" aria-hidden="true">
-              &#128276;
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-brand-700">
-                Alerts are not switched on for this device
-              </p>
-              <p className="mt-0.5 text-sm text-steel-600">
-                You will not be told about a visitor unless the app is open
-                in front of you. Setting it up takes about a minute.
-              </p>
+          <div className="mb-6 rounded-xl bg-brand-50 p-4 ring-1 ring-brand-200 sm:flex sm:items-center sm:gap-5 sm:p-5">
+            <div className="flex gap-3 sm:flex-1">
+              <span
+                className="text-xl leading-none sm:text-2xl"
+                aria-hidden="true"
+              >
+                &#128276;
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-balance font-medium text-brand-700">
+                  Alerts are not switched on for this device
+                </p>
+                <p className="mt-1 text-sm text-steel-600">
+                  You will not be told about a visitor unless the app is
+                  open in front of you. Setting it up takes about a minute.
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="mt-4 flex gap-2 sm:mt-0 sm:shrink-0">
               <button
                 onClick={() => setGuideOpen(true)}
-                className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+                className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 sm:flex-none"
               >
                 Set up alerts
               </button>
               <button
                 onClick={snooze}
-                className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+                className="flex-1 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50 sm:flex-none"
               >
                 Not now
               </button>

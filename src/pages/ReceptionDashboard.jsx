@@ -334,10 +334,20 @@ function Stat({ label, value, tone = 'plain', note }) {
     inside: 'bg-inside-50 ring-inside-500/30 text-inside-700',
   }
   return (
-    <div className={`rounded-xl px-5 py-4 ring-1 ${tones[tone]}`}>
-      <p className="text-3xl font-semibold">{value}</p>
-      <p className="mt-0.5 text-xs font-medium text-steel-500">{label}</p>
-      {note && <p className="mt-1 text-xs text-steel-400">{note}</p>}
+    <div
+      className={`flex items-baseline gap-3 rounded-xl px-4 py-3 ring-1 sm:block sm:px-5 sm:py-4 ${tones[tone]}`}
+    >
+      {/* Side by side on a phone: three stacked cards with a huge
+          numeral each pushed the visitor list below the fold. */}
+      <p className="text-2xl font-semibold tabular-nums sm:text-3xl">
+        {value}
+      </p>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-steel-500 sm:mt-0.5">
+          {label}
+        </p>
+        {note && <p className="text-xs text-steel-400 sm:mt-1">{note}</p>}
+      </div>
     </div>
   )
 }
