@@ -10,12 +10,15 @@ export default function Users() {
   const { user } = useAuth()
   const [sentTo, setSentTo] = useState(null)
   const [sending, setSending] = useState(null)
+  const [sendError, setSendError] = useState(null)
 
   async function sendReset(profile) {
     setSending(profile.id)
-    await sendResetEmail(profile.email)
+    setSendError(null)
+    const message = await sendResetEmail(profile.email)
     setSending(null)
-    setSentTo(profile.id)
+    if (message) setSendError(message)
+    else setSentTo(profile.id)
   }
 
   const departments = useTable('departments', { order: 'name' })
@@ -49,6 +52,17 @@ export default function Users() {
       }
     >
       <ErrorNote message={error} onDismiss={() => setError(null)} />
+
+      {sendError && (
+        <div className="mb-4 rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700 ring-1 ring-brand-200">
+          <p>{sendError}</p>
+          <p className="mt-2 text-steel-600">
+            Until email is configured, set a password directly: Supabase
+            dashboard → <strong>Authentication → Users</strong> → the account →{' '}
+            <strong>Reset password</strong>. No email is involved.
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <p className="py-6 text-center text-steel-400">Loading…</p>

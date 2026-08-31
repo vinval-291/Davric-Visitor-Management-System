@@ -353,6 +353,25 @@ Properties worth preserving if you change anything:
 
 ---
 
+## Password resets need an email service
+
+Resets, and any future email the system sends, go through Supabase's
+mail service. The built-in one is a testing convenience: rate limited
+to a couple of messages an hour and it fails outright beyond that,
+which surfaces as `Error sending recovery email`.
+
+Configure real SMTP before the pilot, under **Authentication → Emails
+→ SMTP Settings**. Any provider works — Resend, Brevo, SendGrid, or
+Dav-Ric's own mail server. It needs a host, port, username, password
+and a sender address on a domain the company controls.
+
+Until that is done, reset a password directly instead: Supabase
+dashboard → **Authentication → Users** → the account → **Reset
+password**. No email is involved. The app says as much rather than
+showing the raw error.
+
+---
+
 ## Outstanding decisions for Dav-Ric Group
 
 - **Company name**: the logo reads "Dav-Ric Group of Companies"; the

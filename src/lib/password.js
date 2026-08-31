@@ -21,12 +21,38 @@ export function passwordProblem(password, confirmation) {
   return null
 }
 
-/** Sends the reset email. Where the link lands is set here. */
+/**
+ * Sends the reset email. Where the link lands is set here.
+ *
+ * Returns null on success, or a message worth showing someone who is
+ * standing at a desk unable to get in.
+ *
+ * The failure worth handling is the mail server, not the address.
+ * Supabase answers a non-existent address with success on purpose --
+ * saying otherwise would confirm who has an account here -- so an
+ * error back from this call means the project could not send at all.
+ * Left raw it reads "Error sending recovery email", which tells the
+ * person locked out nothing they can act on.
+ */
 export async function sendResetEmail(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
     redirectTo: `${window.location.origin}/reset-password`,
   })
-  return error?.message ?? null
+
+  if (!error) return null
+
+  const status = error.status ?? 0
+  if (status >= 500 || /sending|smtp|mail/i.test(error.message)) {
+    return (
+      'The reset email could not be sent. This is a problem with the mail ' +
+      'service, not your account. Ask a system administrator to reset your ' +
+      'password for you.'
+    )
+  }
+  if (status === 429) {
+    return 'Too many attempts. Wait a few minutes and try again.'
+  }
+  return error.message
 }
 
 /** Used on the reset page, where the recovery link is the proof. */
