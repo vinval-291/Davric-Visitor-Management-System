@@ -353,22 +353,53 @@ Properties worth preserving if you change anything:
 
 ---
 
-## Password resets need an email service
+## Email (password resets)
 
-Resets, and any future email the system sends, go through Supabase's
-mail service. The built-in one is a testing convenience: rate limited
-to a couple of messages an hour and it fails outright beyond that,
-which surfaces as `Error sending recovery email`.
+Sent through Supabase's SMTP settings, under **Authentication → Emails**.
+The working configuration for this project:
 
-Configure real SMTP before the pilot, under **Authentication → Emails
-→ SMTP Settings**. Any provider works — Resend, Brevo, SendGrid, or
-Dav-Ric's own mail server. It needs a host, port, username, password
-and a sender address on a domain the company controls.
+| Field | Value |
+|---|---|
+| Host | `business16.web-hosting.com` |
+| Port | `465` |
+| Username | `dev@davricgroup.com` |
+| Password | the mailbox password (never in this repo) |
+| Sender address | `dev@davricgroup.com` |
+| Sender name | Davric VMS |
 
-Until that is done, reset a password directly instead: Supabase
-dashboard → **Authentication → Users** → the account → **Reset
-password**. No email is involved. The app says as much rather than
-showing the raw error.
+Verify any change with `npm run test:smtp`, which walks the SMTP
+conversation a step at a time and says which step failed. Supabase
+reports every mail problem as the same opaque "Error sending recovery
+email", so testing through the app tells you nothing.
+
+### Three things that broke this, worth knowing
+
+**The host must be the name on the TLS certificate.** The mailbox is
+on Namecheap shared hosting, whose certificate covers
+`*.web-hosting.com` — not `davricgroup.com`. Connecting by the company
+domain fails verification before authentication is even attempted.
+Use the server name, `business16.web-hosting.com`.
+
+**The sender address must be a real mailbox.** Exim verifies it and
+answers `550 ... No Such User Here` for one that does not exist. A
+plausible-looking `no-reply@` address that was never created will
+reject every message, while authentication succeeds — which reads as a
+password problem and is not one.
+
+**Supabase cannot show a saved SMTP password.** Changing the mailbox
+password means retyping it here in full; leaving the field alone keeps
+the old value and looks identical either way.
+
+### Not yet done
+
+**DKIM is not configured** for `davricgroup.com`. SPF already covers
+the mail server, so mail sends, but without DKIM some of it will land
+in spam. Ask whoever manages DNS to add the DKIM record from cPanel's
+Email Deliverability page.
+
+Consider `no-reply@davricgroup.com` as the sender once the mailbox is
+created — staff see this address on reset emails, and `dev@` reads like
+somebody's personal account.
 
 ---
 

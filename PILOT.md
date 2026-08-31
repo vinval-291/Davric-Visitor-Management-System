@@ -76,6 +76,11 @@ removes one of the reasons for leaving the paper book behind.
 
 ### Contingency
 
+- [ ] Password resets tested end to end — someone locked out on a
+      Monday morning with no way back in is exactly what this list is
+      for. Check it with `npm run test:smtp`
+- [ ] Someone other than the developer can reset a password from the
+      Supabase dashboard
 - [ ] The paper logbook stays on the desk for the whole pilot
 - [ ] Reception knows: **if the system is down, use the book** — no
       one waits for the network
