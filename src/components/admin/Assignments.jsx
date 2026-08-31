@@ -10,7 +10,7 @@ import { Panel, ErrorNote, Button, inputClass } from './ui.jsx'
  */
 export default function Assignments() {
   const executives = useTable('executives', {
-    select: 'id, full_name, position, is_active, departments(name)',
+    select: 'id, full_name, position, is_active, user_id, departments(name)',
     order: 'full_name',
   })
   const profiles = useTable('profiles', {
@@ -60,14 +60,16 @@ export default function Assignments() {
     executives.loading || profiles.loading || assignments.loading
   const error = executives.error || profiles.error || assignments.error
 
+  // Only executives with neither a PA nor a login of their own are a
+  // problem: the rest are reachable one way or the other.
   const unassigned = executives.items.filter(
-    (e) => e.is_active && forExecutive(e.id).length === 0,
+    (e) => e.is_active && forExecutive(e.id).length === 0 && !e.user_id,
   ).length
 
   return (
     <Panel
       title="PA assignments"
-      description="Who is notified when a visitor arrives for each executive. A PA can cover several executives, and an executive can have a stand-in as well as a primary."
+      description="Who is notified when a visitor arrives for each executive. A PA can cover several executives, and an executive can have a stand-in as well as a primary. An executive with no PA is alerted directly if they have their own login."
     >
       <ErrorNote message={error} onDismiss={() => assignments.setError(null)} />
 
@@ -80,9 +82,11 @@ export default function Assignments() {
 
       {unassigned > 0 && (
         <p className="mb-4 rounded-lg bg-steel-50 px-4 py-3 text-sm text-steel-600 ring-1 ring-steel-200">
-          {unassigned} active {unassigned === 1 ? 'executive has' : 'executives have'}{' '}
-          no PA. Their visitor alerts go to the super admins instead, so
-          nothing is lost — but somebody at the desk is chasing them.
+          {unassigned} active{' '}
+          {unassigned === 1 ? 'executive has' : 'executives have'} no PA and no
+          login of their own. Their visitor alerts go to the super admins
+          instead, so nothing is lost — but the person being visited is the
+          last to know.
         </p>
       )}
 
@@ -117,9 +121,18 @@ export default function Assignments() {
                   </div>
 
                   {rows.length === 0 ? (
-                    <p className="mt-2 text-sm text-brand-700">
-                      No PA assigned — alerts fall back to super admins
-                    </p>
+                    ex.user_id ? (
+                      <p className="mt-2 text-sm text-inside-700">
+                        No PA — this executive is alerted directly on their own
+                        login
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-sm text-brand-700">
+                        No PA and no login — alerts fall back to super admins.
+                        Give them a login under <strong>Executives</strong> to
+                        tell them directly.
+                      </p>
+                    )
                   ) : (
                     <ul className="mt-2 space-y-1.5">
                       {rows.map((a) => (

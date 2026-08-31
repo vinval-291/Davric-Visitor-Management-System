@@ -13,9 +13,16 @@ const BLANK = { full_name: '', position: '', department_id: '' }
 
 export default function Executives() {
   const departments = useTable('departments', { order: 'name' })
+  const people = useTable('profiles', {
+    select: 'id, full_name, email, role, is_active',
+    order: 'full_name',
+  })
   const { items, loading, error, setError, create, update, remove } = useTable(
     'executives',
-    { select: 'id, full_name, position, department_id, is_active', order: 'full_name' },
+    {
+      select: 'id, full_name, position, department_id, is_active, user_id',
+      order: 'full_name',
+    },
   )
   const [form, setForm] = useState(BLANK)
   const [busy, setBusy] = useState(false)
@@ -39,7 +46,7 @@ export default function Executives() {
   return (
     <Panel
       title="Executives & management staff"
-      description="The people a visitor can ask for. Deactivating someone hides them from the reception picker without touching any past visit record."
+      description="The people a visitor can ask for. Give an executive a login and they are alerted directly whenever no PA covers them. Deactivating someone hides them from the reception picker without touching any past visit record."
       footer={
         <form onSubmit={add} className="grid gap-2 sm:grid-cols-4">
           <input
@@ -80,7 +87,7 @@ export default function Executives() {
         <p className="py-6 text-center text-steel-400">Loading…</p>
       ) : (
         <Table
-          head={['Name', 'Position', 'Department', 'Status', '']}
+          head={['Name', 'Position', 'Department', 'Own login', 'Status', '']}
           empty={items.length === 0 ? 'No executives yet.' : null}
         >
           {items.map((ex) => (
@@ -105,6 +112,34 @@ export default function Executives() {
                       {d.name}
                     </option>
                   ))}
+                </select>
+              </td>
+              <td className="px-3 py-2.5">
+                {/* Linking a login is what lets an executive be told
+                    directly. Only accounts set to the Executive role
+                    appear, and one already linked elsewhere is hidden
+                    so the same person cannot cover two entries. */}
+                <select
+                  value={ex.user_id ?? ''}
+                  onChange={(e) =>
+                    update(ex.id, { user_id: e.target.value || null })
+                  }
+                  className={`${inputClass} py-1.5`}
+                >
+                  <option value="">No login</option>
+                  {people.items
+                    .filter(
+                      (p) =>
+                        p.role === 'executive' &&
+                        p.is_active &&
+                        (p.id === ex.user_id ||
+                          !items.some((other) => other.user_id === p.id)),
+                    )
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.full_name || p.email}
+                      </option>
+                    ))}
                 </select>
               </td>
               <td className="px-3 py-2.5">

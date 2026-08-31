@@ -101,11 +101,13 @@ export function useAuth() {
 export const HOME_FOR_ROLE = {
   super_admin: '/admin',
   receptionist: '/reception',
-  pa: '/pa',
+  pa: '/arrivals',
+  executive: '/arrivals',
 }
 
 export const ROLE_LABEL = {
   super_admin: 'Super Admin',
   receptionist: 'Receptionist',
   pa: 'Personal Assistant',
+  executive: 'Executive',
 }

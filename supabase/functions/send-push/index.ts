@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
           title: titleFor(alert.type),
           body: alert.message,
           tag: `visitor-${visitor_id}`,
-          url: alert.type === 'visitor_admitted' ? '/reception' : '/pa',
+          url: alert.type === 'visitor_admitted' ? '/reception' : '/arrivals',
         })
 
         try {

@@ -2,7 +2,7 @@ import { useTable } from '../../lib/useTable.js'
 import { useAuth, ROLE_LABEL } from '../../lib/auth.jsx'
 import { Panel, ErrorNote, Button, Table, ActivePill, inputClass } from './ui.jsx'
 
-const ROLES = ['super_admin', 'receptionist', 'pa']
+const ROLES = ['super_admin', 'receptionist', 'pa', 'executive']
 
 export default function Users() {
   const { user } = useAuth()

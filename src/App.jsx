@@ -18,7 +18,7 @@ import Login from './pages/Login.jsx'
 const ReceptionDashboard = lazy(() => import('./pages/ReceptionDashboard.jsx'))
 const NewVisitor = lazy(() => import('./pages/NewVisitor.jsx'))
 const History = lazy(() => import('./pages/History.jsx'))
-const PaDashboard = lazy(() => import('./pages/PaDashboard.jsx'))
+const ArrivalsDashboard = lazy(() => import('./pages/PaDashboard.jsx'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'))
 
 export default function App() {
@@ -57,13 +57,18 @@ export default function App() {
             />
 
             <Route
-              path="/pa"
+              path="/arrivals"
               element={
-                <ProtectedRoute allow={['pa', 'super_admin']}>
-                  <PaDashboard />
+                <ProtectedRoute allow={['pa', 'executive', 'super_admin']}>
+                  <ArrivalsDashboard />
                 </ProtectedRoute>
               }
             />
+
+            {/* The PA dashboard was /pa before executives could sign in
+                and use the same screen. Anyone with the old link or an
+                old notification still lands in the right place. */}
+            <Route path="/pa" element={<Navigate to="/arrivals" replace />} />
 
             <Route
               path="/admin"

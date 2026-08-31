@@ -3,8 +3,38 @@ import AppShell from '../components/AppShell.jsx'
 import { useNotifications } from '../lib/useNotifications.js'
 import { clockTime, elapsed } from '../lib/time.js'
 import { playAlert, systemNotify, unlockAudio, loadSettings } from '../lib/sound.js'
+import { useAuth } from '../lib/auth.jsx'
+import { supabase } from '../lib/supabase.js'
 
+/**
+ * Arrivals.
+ *
+ * Shared by PAs and by executives who have no PA covering them. The
+ * mechanics are identical -- see the alert, send the visitor up -- so
+ * the screen is one component and only the wording changes.
+ */
 export default function PaDashboard() {
+  const { role, user } = useAuth()
+  const isExecutive = role === 'executive'
+
+  // An executive account is useless until an administrator links it to
+  // an executive record; without that nothing routes to them and the
+  // screen would just sit empty with no explanation.
+  const [linked, setLinked] = useState(isExecutive ? null : true)
+  useEffect(() => {
+    if (!isExecutive || !user?.id) return
+    let active = true
+    supabase
+      .from('executives')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => active && setLinked(Boolean(data)))
+    return () => {
+      active = false
+    }
+  }, [isExecutive, user?.id])
+
   // Re-render on a timer so "waiting 4 min" stays honest without a
   // refresh. Cheap: it only touches this component.
   const [, setTick] = useState(0)
@@ -20,6 +50,7 @@ export default function PaDashboard() {
     const v = notification?.visitor
     systemNotify({
       title: 'Visitor has arrived',
+      url: '/arrivals',
       body: v
         ? `${v.full_name}${v.organization ? ` (${v.organization})` : ''} is here to see ${v.executive_name_snapshot}`
         : notification?.message,
@@ -42,8 +73,12 @@ export default function PaDashboard() {
 
   return (
     <AppShell
-      title="Visitor notifications"
-      subtitle="Alerts appear here the moment a visitor is registered at reception"
+      title={isExecutive ? 'Your visitors' : 'Visitor notifications'}
+      subtitle={
+        isExecutive
+          ? 'Anyone arriving to see you appears here the moment reception registers them'
+          : 'Alerts appear here the moment a visitor is registered at reception'
+      }
     >
       <div className="mb-6 flex flex-wrap gap-3">
         <Stat label="Waiting in reception" value={waiting} accent={waiting > 0} />
@@ -57,10 +92,12 @@ export default function PaDashboard() {
         </p>
       )}
 
-      {loading ? (
+      {linked === false ? (
+        <NotLinked />
+      ) : loading ? (
         <p className="text-steel-400">Loading…</p>
       ) : items.length === 0 ? (
-        <EmptyState />
+        <EmptyState isExecutive={isExecutive} />
       ) : (
         <ul className="space-y-3">
           {items.map((n) => (
@@ -217,13 +254,31 @@ function StatusPill({ gone, admitted }) {
   )
 }
 
-function EmptyState() {
+function EmptyState({ isExecutive }) {
   return (
     <div className="rounded-2xl border border-dashed border-steel-300 bg-white p-12 text-center">
       <p className="text-sm font-semibold text-steel-700">No visitors yet</p>
       <p className="mx-auto mt-1 max-w-sm text-sm text-steel-400">
-        When reception registers a visitor for an executive you cover, the
-        alert appears here immediately — no need to refresh.
+        {isExecutive
+          ? 'When reception registers someone here to see you, the alert appears immediately — no need to refresh.'
+          : 'When reception registers a visitor for an executive you cover, the alert appears here immediately — no need to refresh.'}
+      </p>
+    </div>
+  )
+}
+
+function NotLinked() {
+  return (
+    <div className="rounded-2xl bg-white p-10 text-center shadow-sm ring-1 ring-brand-200">
+      <p className="font-semibold text-ink">Your account is not linked yet</p>
+      <p className="mx-auto mt-2 max-w-md text-sm text-steel-600">
+        You are signed in as an executive, but this account has not been
+        connected to your entry in the staff list — so arrivals for you have
+        nowhere to go.
+      </p>
+      <p className="mx-auto mt-2 max-w-md text-sm text-steel-500">
+        Ask an administrator to open <strong>Admin → Executives</strong>, find
+        your name, and set <strong>Own login</strong> to this account.
       </p>
     </div>
   )

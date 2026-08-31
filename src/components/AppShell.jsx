@@ -11,13 +11,14 @@ const NAV_BY_ROLE = {
     { to: '/admin', label: 'Admin' },
     { to: '/reception', label: 'Reception' },
     { to: '/history', label: 'History' },
-    { to: '/pa', label: 'Notifications' },
+    { to: '/arrivals', label: 'Arrivals' },
   ],
   receptionist: [
     { to: '/reception', label: 'Reception' },
     { to: '/history', label: 'History' },
   ],
-  pa: [{ to: '/pa', label: 'Notifications' }],
+  pa: [{ to: '/arrivals', label: 'Arrivals' }],
+  executive: [{ to: '/arrivals', label: 'Arrivals' }],
 }
 
 const linkClass = ({ isActive }) =>
