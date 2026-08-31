@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth, HOME_FOR_ROLE } from './lib/auth.jsx'
-import ProtectedRoute from './components/ProtectedRoute.jsx'
+import ProtectedRoute, { NoAccess } from './components/ProtectedRoute.jsx'
 import Logo from './components/Logo.jsx'
 import Login from './pages/Login.jsx'
 
@@ -91,9 +91,19 @@ export default function App() {
 /** Sends each signed-in user to the dashboard their role belongs to. */
 function RoleHome() {
   const { session, role, loading } = useAuth()
+
   if (loading) return <Splash />
   if (!session) return <Navigate to="/login" replace />
-  return <Navigate to={HOME_FOR_ROLE[role] ?? '/login'} replace />
+
+  const home = HOME_FOR_ROLE[role]
+
+  // Signed in, but with no role this app recognises. Say so, rather
+  // than redirecting to the login page -- which, seeing a valid
+  // session, would redirect straight back here and leave the viewer
+  // watching a blank screen while the two bounced off each other.
+  if (!home) return <NoAccess />
+
+  return <Navigate to={home} replace />
 }
 
 function Splash() {

@@ -32,7 +32,7 @@ export default function ProtectedRoute({ allow, children }) {
   return children
 }
 
-function Splash() {
+export function Splash() {
   return (
     <div className="flex min-h-full items-center justify-center bg-steel-50">
       <div className="text-center">
@@ -43,7 +43,7 @@ function Splash() {
   )
 }
 
-function NoAccess({ reason }) {
+export function NoAccess({ reason }) {
   const { signOut, user } = useAuth()
   return (
     <div className="flex min-h-full items-center justify-center bg-steel-50 p-6">

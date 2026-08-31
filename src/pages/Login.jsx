@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth, HOME_FOR_ROLE } from '../lib/auth.jsx'
 import Logo from '../components/Logo.jsx'
+import { Splash } from '../components/ProtectedRoute.jsx'
 
 export default function Login() {
   const { session, role, loading, signIn } = useAuth()
@@ -12,10 +13,14 @@ export default function Login() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  if (loading) return null
+  // The branded splash, not a blank page: this render happens on every
+  // load while the session and profile are being resolved.
+  if (loading) return <Splash />
 
   if (session) {
-    const target = location.state?.from ?? HOME_FOR_ROLE[role] ?? '/'
+    const from = location.state?.from
+    const target =
+      (from && from !== '/login' ? from : null) ?? HOME_FOR_ROLE[role] ?? '/'
     return <Navigate to={target} replace />
   }
 
