@@ -18,7 +18,8 @@
     "sb:link": "supabase link --project-ref zqkbgturnbezukrcoqnl",
     "push:deploy": "supabase functions deploy send-push",
     "push:logs": "supabase functions logs send-push",
-    "diagnose:push": "node --env-file=.env scripts/diagnose-push.mjs"
+    "diagnose:push": "node --env-file=.env scripts/diagnose-push.mjs",
+    "test:smtp": "node --env-file=.env scripts/test-smtp.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
