@@ -1,8 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth, ROLE_LABEL } from '../lib/auth.jsx'
 import { useIdleTimeout } from '../lib/useIdleTimeout.js'
 import NotificationSettings from './NotificationSettings.jsx'
+import AlertSetupGuide from './AlertSetupGuide.jsx'
+import { getPushState, pushSupported, pushConfigured } from '../lib/push.js'
 import { OfflineBar, UpdateBar, InstallButton } from './AppStatusBars.jsx'
 import Logo from './Logo.jsx'
 
@@ -21,6 +23,9 @@ const NAV_BY_ROLE = {
   executive: [{ to: '/arrivals', label: 'Arrivals' }],
 }
 
+const SETUP_SEEN = 'vms.setup.seen'
+const SETUP_SNOOZED = 'vms.setup.snoozed'
+
 const linkClass = ({ isActive }) =>
   `shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition ${
     isActive
@@ -35,6 +40,38 @@ export default function AppShell({ title, subtitle, actions, children }) {
   const handleTimeout = useCallback(() => signOut(), [signOut])
   const { secondsLeft } = useIdleTimeout(handleTimeout)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
+  const [pushState, setPushState] = useState('checking')
+  const [dismissed, setDismissed] = useState(
+    () => Number(localStorage.getItem(SETUP_SNOOZED) || 0) > Date.now(),
+  )
+
+  useEffect(() => {
+    if (!pushSupported() || !pushConfigured) return
+    getPushState().then((state) => {
+      setPushState(state)
+      // Open the guide unprompted the first time someone signs in on
+      // a device that cannot yet receive alerts. After that it is
+      // theirs to reopen: nobody wants a dialog every morning.
+      if (state !== 'on' && !localStorage.getItem(SETUP_SEEN)) {
+        localStorage.setItem(SETUP_SEEN, '1')
+        setGuideOpen(true)
+      }
+    })
+  }, [guideOpen])
+
+  function snooze() {
+    // A week: long enough not to nag, short enough that somebody who
+    // meant to do it later is reminded before the pilot ends.
+    localStorage.setItem(SETUP_SNOOZED, String(Date.now() + 7 * 864e5))
+    setDismissed(true)
+  }
+
+  const needsSetup =
+    pushSupported() &&
+    pushConfigured &&
+    pushState !== 'on' &&
+    pushState !== 'checking'
 
   return (
     <div className="min-h-full bg-steel-50">
@@ -113,6 +150,36 @@ export default function AppShell({ title, subtitle, actions, children }) {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        {needsSetup && !dismissed && (
+          <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl bg-brand-50 px-5 py-4 ring-1 ring-brand-200">
+            <span className="text-2xl leading-none" aria-hidden="true">
+              &#128276;
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-brand-700">
+                Alerts are not switched on for this device
+              </p>
+              <p className="mt-0.5 text-sm text-steel-600">
+                You will not be told about a visitor unless the app is open
+                in front of you. Setting it up takes about a minute.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setGuideOpen(true)}
+                className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+              >
+                Set up alerts
+              </button>
+              <button
+                onClick={snooze}
+                className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        )}
         {(title || actions) && (
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
@@ -132,8 +199,16 @@ export default function AppShell({ title, subtitle, actions, children }) {
       </main>
 
       {settingsOpen && (
-        <NotificationSettings onClose={() => setSettingsOpen(false)} />
+        <NotificationSettings
+          onClose={() => setSettingsOpen(false)}
+          onOpenGuide={() => {
+            setSettingsOpen(false)
+            setGuideOpen(true)
+          }}
+        />
       )}
+
+      {guideOpen && <AlertSetupGuide onClose={() => setGuideOpen(false)} />}
     </div>
   )
 }

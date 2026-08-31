@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import {
+  canPrompt,
+  promptInstall,
+  subscribeToInstall,
+  isStandalone,
+  isIos,
+} from '../lib/installPrompt.js'
 
 /**
  * The three things a reception device needs to be told about:
@@ -65,15 +72,6 @@ export function UpdateBar() {
   )
 }
 
-const isStandalone = () =>
-  window.matchMedia?.('(display-mode: standalone)').matches ||
-  window.navigator.standalone === true
-
-const isIos = () =>
-  /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-  // iPadOS reports as a Mac, so touch points are the giveaway.
-  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-
 /**
  * Install button.
  *
@@ -82,38 +80,22 @@ const isIos = () =>
  * the only option there is to explain where the Share menu is.
  */
 export function InstallButton({ className = '' }) {
-  const [deferred, setDeferred] = useState(null)
   const [showIosHelp, setShowIosHelp] = useState(false)
-  const [installed, setInstalled] = useState(isStandalone)
+  const [, force] = useState(0)
 
-  useEffect(() => {
-    const capture = (e) => {
-      e.preventDefault()
-      setDeferred(e)
-    }
-    const done = () => {
-      setInstalled(true)
-      setDeferred(null)
-    }
-    window.addEventListener('beforeinstallprompt', capture)
-    window.addEventListener('appinstalled', done)
-    return () => {
-      window.removeEventListener('beforeinstallprompt', capture)
-      window.removeEventListener('appinstalled', done)
-    }
-  }, [])
+  // The prompt event is captured once in lib/installPrompt.js. Two
+  // components listening separately meant whichever mounted second
+  // never saw it, and it can only be used once.
+  useEffect(() => subscribeToInstall(() => force((n) => n + 1)), [])
 
-  if (installed) return null
+  if (isStandalone()) return null
 
   const ios = isIos()
-  if (!deferred && !ios) return null
+  if (!canPrompt() && !ios) return null
 
   async function install() {
     if (ios) return setShowIosHelp(true)
-    deferred.prompt()
-    const { outcome } = await deferred.userChoice
-    if (outcome === 'accepted') setInstalled(true)
-    setDeferred(null)
+    await promptInstall()
   }
 
   return (

@@ -22,7 +22,7 @@ import {
   pushDebug,
 } from '../lib/push.js'
 
-export default function NotificationSettings({ onClose }) {
+export default function NotificationSettings({ onClose, onOpenGuide }) {
   const [settings, setSettings] = useState(loadSettings)
   const [error, setError] = useState(null)
   const [permission, setPermission] = useState(
@@ -556,9 +556,18 @@ ${await pushDebug()}`)
             : 'Without the setting above, alerts only arrive while the app is open — a phone freezes a backgrounded app within seconds.'}
         </p>
 
+        {onOpenGuide && (
+          <button
+            onClick={onOpenGuide}
+            className="mt-4 w-full rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+          >
+            Set up alerts step by step
+          </button>
+        )}
+
         <button
           onClick={onClose}
-          className="mt-6 w-full rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+          className="mt-3 w-full rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           Done
         </button>
