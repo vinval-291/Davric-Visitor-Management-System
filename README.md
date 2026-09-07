@@ -84,6 +84,7 @@ Then `supabase/seed.sql` for placeholder departments and executives.
 `test:security` needs the `TEST_*` credentials in `.env`. See
 `.env.example`. **Never put those in Vercel.**
 
+How the system works, end to end: [SYSTEM.md](SYSTEM.md).
 Manual test plan: [TESTING.md](TESTING.md).
 Pilot plan and training: [PILOT.md](PILOT.md).
 
