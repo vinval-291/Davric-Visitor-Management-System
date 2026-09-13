@@ -313,8 +313,14 @@ export default function NewVisitor() {
         {/* Equal columns on every step, never a width that changes as
             the steps change. The signature pad clears itself when its
             width changes, so a column that grew or shrank between steps
-            would wipe a signature the visitor had already given. */}
-        <div className="mt-5 grid gap-5 lg:grid-cols-2 lg:items-start">
+            would wipe a signature the visitor had already given.
+
+            Equal heights too: no items-start, so both cards stretch to
+            whichever is taller on the current step and the pair reads as
+            one panel rather than two boxes ending at different points.
+            Stretching changes only height, never width, so the pad is
+            left alone. */}
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
           {/* ---- left: the current step ---------------------------- */}
           <section
             className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-steel-200 sm:p-6"
