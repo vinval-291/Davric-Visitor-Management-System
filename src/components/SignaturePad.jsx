@@ -23,7 +23,7 @@ import {
  *      looks careless on something meant to be a legal record.
  */
 const SignaturePad = forwardRef(function SignaturePad(
-  { disabled = false, height = 200 },
+  { disabled = false, height = 200, onInkChange },
   ref,
 ) {
   const canvasRef = useRef(null)
@@ -31,6 +31,15 @@ const SignaturePad = forwardRef(function SignaturePad(
   const lastPoint = useRef(null)
   const hasInk = useRef(false)
   const [empty, setEmpty] = useState(true)
+
+  // Lets a parent show "Signature captured" and gate a Next button
+  // without polling isEmpty(). Held in a ref so a new callback each
+  // render does not re-fire the effect.
+  const inkChange = useRef(onInkChange)
+  inkChange.current = onInkChange
+  useEffect(() => {
+    inkChange.current?.(!empty)
+  }, [empty])
 
   // Paint the backing store white and rescale for the device.
   // A transparent PNG would go invisible on a dark background if the
@@ -66,6 +75,12 @@ const SignaturePad = forwardRef(function SignaturePad(
     let lastWidth = canvas.getBoundingClientRect().width
     const observer = new ResizeObserver(() => {
       const width = canvas.getBoundingClientRect().width
+      // A pad hidden with display:none -- a form step not currently
+      // shown -- reports a width of 0. Ignoring that is what lets a
+      // signature survive moving between steps: the bitmap persists
+      // while hidden, and comes back at the same width. Treating it as
+      // a resize wiped a signature the visitor had already given.
+      if (width === 0) return
       if (Math.abs(width - lastWidth) < 1) return
       lastWidth = width
       prepare()
