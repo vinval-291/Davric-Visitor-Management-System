@@ -160,6 +160,9 @@ await mustFail(
     executive_id: coveredId,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     executive_name_snapshot: 'forged',
   }),
 )
@@ -174,6 +177,9 @@ await mustPass(
     executive_id: coveredId,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     created_by: desk.userId,
   }),
 )
@@ -184,6 +190,9 @@ await mustFail(
     executive_id: coveredId,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     created_by: admin.userId,
   }),
 )
@@ -271,6 +280,9 @@ const { data: hidden } = await admin.client
     executive_id: uncoveredId,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     created_by: admin.userId,
   })
   .select('id')
@@ -293,6 +305,9 @@ await mustFail(
     executive_id: coveredId,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     created_by: pa.userId,
   }),
 )

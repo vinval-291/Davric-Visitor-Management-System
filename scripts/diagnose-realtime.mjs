@@ -82,6 +82,9 @@ const { data: visit, error: insertError } = await desk
     executive_id: assignment.executive_id,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     created_by: deskUser.user.id,
   })
   .select('id, admitted_at')

@@ -94,6 +94,9 @@ const { data: visit, error: visitError } = await desk.client
     executive_id: assignment.executive_id,
     visit_type: 'official',
     has_appointment: true,
+    phone: '08012345678',
+    organization: 'Test Ltd',
+    purpose: 'Automated test',
     created_by: desk.id,
   })
   .select('id')

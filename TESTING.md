@@ -20,6 +20,9 @@ Sign in as the receptionist account.
 - [ ] **New Visitor** form opens
 - [ ] Submitting an empty form shows inline errors and sends nothing
 - [ ] Phone rejects fewer than 11 digits
+- [ ] Phone is required, and `00000000000` is refused
+- [ ] Company is required
+- [ ] Purpose is required
 - [ ] Phone accepts `+234...` and converts it to `0...`
 - [ ] The executive list is grouped by department
 - [ ] Checking in without choosing official/personal is refused

@@ -62,6 +62,26 @@ begin
     raise exception 'Record whether the visitor has an appointment';
   end if;
 
+  -- Every question on the form is compulsory, so the database refuses a
+  -- visit without them too; a browser can skip its own validation.
+  -- Checked here on insert only, for the same reason as above: older
+  -- visits with no phone or purpose must still be able to check out.
+  if nullif(trim(coalesce(new.phone, '')), '') is null then
+    raise exception 'Record the visitor''s phone number';
+  end if;
+
+  if new.phone ~ '^(\d)\1+$' then
+    raise exception 'That phone number is a placeholder, not a real number';
+  end if;
+
+  if nullif(trim(coalesce(new.organization, '')), '') is null then
+    raise exception 'Record the visitor''s company, or Individual if none';
+  end if;
+
+  if nullif(trim(coalesce(new.purpose, '')), '') is null then
+    raise exception 'Record the purpose of the visit';
+  end if;
+
   return new;
 end $$;
 

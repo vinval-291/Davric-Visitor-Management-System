@@ -45,12 +45,13 @@ cannot be self-assigned — there is no sign-up page.
 The receptionist taps **New Visitor** and fills in:
 
 - Full name (required)
-- Phone — 11 digits, formatted as typed, `+234…` converted automatically
-- Company
+- Phone (required) — 11 digits, formatted as typed, `+234…` converted
+  automatically; a run of one repeated digit such as `00000000000` is refused
+- Company (required) — or “Individual” if they represent no business
 - **Who are you visiting?** (required) — a list grouped by department
 - **Type of visit** (required) — official or personal
 - **Do they have an appointment?** (required) — yes or no
-- Purpose of visit
+- Purpose of visit (required)
 - **Signature** (required) — the device is handed to the visitor
 
 Then **Check in**.

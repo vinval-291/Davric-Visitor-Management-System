@@ -50,9 +50,11 @@ const EMPTY = {
 const FIELD_STEP = {
   full_name: 0,
   phone: 0,
+  organization: 0,
   executive_id: 1,
   visit_type: 1,
   has_appointment: 1,
+  purpose: 2,
   signature: 2,
 }
 
@@ -136,8 +138,18 @@ export default function NewVisitor() {
       } else if (form.full_name.trim().length < 2) {
         next.full_name = 'That name looks too short'
       }
-      if (!isValidPhone(form.phone)) {
+      const digits = normalizePhone(form.phone)
+      if (!digits) {
+        next.phone = "Enter the visitor's phone number"
+      } else if (!isValidPhone(form.phone)) {
         next.phone = 'Phone number must be 11 digits'
+      } else if (/^(\d)\1+$/.test(digits)) {
+        // A required field invites placeholders. 00000000000 passes the
+        // length check and would sit in the record looking like data.
+        next.phone = 'That does not look like a real phone number'
+      }
+      if (!form.organization.trim()) {
+        next.organization = 'Enter their company, or “Individual” if none'
       }
     }
     if (index === 1) {
@@ -146,6 +158,9 @@ export default function NewVisitor() {
       if (!form.has_appointment) {
         next.has_appointment = 'Ask whether they have an appointment'
       }
+    }
+    if (index === 2 && !form.purpose.trim()) {
+      next.purpose = 'Enter the purpose of the visit'
     }
     // Remove this check to make signing optional.
     if (index === 2 && signature.current?.isEmpty()) {
@@ -347,7 +362,7 @@ export default function NewVisitor() {
                     </Field>
                   </div>
 
-                  <Field label="Phone number" hint="11 digits" error={errors.phone}>
+                  <Field label="Phone number" hint="11 digits" required error={errors.phone}>
                     <TextInput
                       value={form.phone}
                       onChange={(e) => {
@@ -367,11 +382,14 @@ export default function NewVisitor() {
                       line the two inputs sit at different heights. */}
                   <Field
                     label="Company / organisation"
-                    hint="Optional — the business they represent"
+                    hint="Their business, or “Individual” if none"
+                    required
+                    error={errors.organization}
                   >
                     <TextInput
                       value={form.organization}
                       onChange={set('organization')}
+                      error={errors.organization}
                       placeholder="e.g. Tech Solutions Ltd"
                       autoComplete="off"
                     />
@@ -458,6 +476,7 @@ export default function NewVisitor() {
                 <CardHeading
                   title="Purpose of visit"
                   text="Why they have come. The host reads this in their alert."
+                  required
                 />
                 {/* A plain textarea rather than the shared TextArea, so it
                     matches the signature pad exactly: same height, same
@@ -469,7 +488,9 @@ export default function NewVisitor() {
                     aria-label="Purpose of visit"
                     placeholder="e.g. Contract review with the legal team"
                     style={{ height: SIGNATURE_HEIGHT }}
-                    className="block w-full resize-none rounded-lg border-0 bg-white px-4 py-3 text-base text-ink ring-1 ring-steel-300 transition placeholder:text-steel-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className={`block w-full resize-none rounded-lg border-0 bg-white px-4 py-3 text-base text-ink ring-1 transition placeholder:text-steel-400 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
+                      errors.purpose ? 'ring-brand-500' : 'ring-steel-300'
+                    }`}
                   />
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -478,7 +499,10 @@ export default function NewVisitor() {
                     <button
                       key={suggestion}
                       type="button"
-                      onClick={() => setForm((f) => ({ ...f, purpose: suggestion }))}
+                      onClick={() => {
+                        setForm((f) => ({ ...f, purpose: suggestion }))
+                        setErrors((x) => ({ ...x, purpose: undefined }))
+                      }}
                       className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition ${
                         form.purpose === suggestion
                           ? 'bg-brand-50 text-brand-700 ring-brand-300'
@@ -489,6 +513,11 @@ export default function NewVisitor() {
                     </button>
                   ))}
                 </div>
+                {errors.purpose && (
+                  <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2.5 text-center text-sm font-medium text-brand-700 ring-1 ring-brand-200">
+                    {errors.purpose}
+                  </p>
+                )}
               </>
             )}
 
@@ -565,6 +594,7 @@ export default function NewVisitor() {
             <CardHeading
               title="Visitor signature"
               text="Please ask the visitor to sign on the screen below."
+              required
             />
             <div className="mt-4">
               <SignaturePad
@@ -596,10 +626,13 @@ export default function NewVisitor() {
   )
 }
 
-function CardHeading({ title, text }) {
+function CardHeading({ title, text, required }) {
   return (
     <div>
-      <h2 className="text-base font-semibold text-ink">{title}</h2>
+      <h2 className="text-base font-semibold text-ink">
+        {title}
+        {required && <span className="ml-0.5 text-brand-600">*</span>}
+      </h2>
       {text && <p className="mt-0.5 text-sm text-steel-500">{text}</p>}
     </div>
   )
