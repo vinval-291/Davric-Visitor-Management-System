@@ -306,6 +306,8 @@ export default function NewVisitor() {
       actions={<div className="hidden items-center gap-2 md:flex">{actions}</div>}
     >
       <form id={FORM_ID} onSubmit={handlePrimary} noValidate>
+        <QuickStats counts={counts} />
+
         <div className="rounded-2xl bg-white px-4 py-3.5 shadow-sm ring-1 ring-steel-200 sm:px-6 sm:py-4">
           <Stepper steps={STEPS} current={step} reached={reached} onSelect={goTo} />
         </div>
@@ -584,8 +586,6 @@ export default function NewVisitor() {
           </section>
         </div>
 
-        <QuickStats counts={counts} />
-
         {/* Phones: the actions follow the thumb instead of sitting in
             the page header, where they would scroll out of reach. */}
         <div className="sticky bottom-0 -mx-4 mt-6 flex justify-end gap-2 border-t border-steel-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
@@ -649,7 +649,7 @@ function QuickStats({ counts }) {
   ]
 
   return (
-    <section className="mt-6">
+    <section className="mb-5">
       <h2 className="text-sm font-semibold text-ink">Today at reception</h2>
       <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
