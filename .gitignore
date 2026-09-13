@@ -14,3 +14,6 @@ dist-ssr
 # Supabase CLI local state
 supabase/.temp
 supabase/.branches
+
+# Local one-off files that may name real visitors. Never commit.
+supabase/.local/
