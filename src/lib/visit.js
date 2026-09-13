@@ -7,16 +7,19 @@
  * reasonably wonder whether they meant the same thing.
  */
 
+// Hints kept to one short line. The two questions sit side by side
+// with their buttons on one row, and a hint that wraps to two or three
+// lines makes its button taller than the one beside it.
 export const VISIT_TYPES = [
-  { value: 'official', label: 'Official', hint: 'Work, business or a meeting' },
-  { value: 'personal', label: 'Personal', hint: 'Family, a friend or a private matter' },
+  { value: 'official', label: 'Official', hint: 'Work or business' },
+  { value: 'personal', label: 'Personal', hint: 'Family or private' },
 ]
 
 // Held as 'yes' / 'no' in the form so "not answered yet" is an empty
 // string rather than false -- false is a real answer.
 export const APPOINTMENT_CHOICES = [
   { value: 'yes', label: 'Yes', hint: 'Expected today' },
-  { value: 'no', label: 'No', hint: 'Arrived without one' },
+  { value: 'no', label: 'No', hint: 'Walk-in' },
 ]
 
 /** Null for visits recorded before these questions existed. */

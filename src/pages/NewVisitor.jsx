@@ -4,7 +4,6 @@ import AppShell from '../components/AppShell.jsx'
 import {
   Field,
   TextInput,
-  TextArea,
   Select,
   ChoiceGroup,
 } from '../components/Field.jsx'
@@ -25,7 +24,11 @@ import { sendPushFor } from '../lib/push.js'
 
 const FORM_ID = 'new-visitor-form'
 
-const STEPS = ['Visitor details', 'Host & purpose', 'Signature', 'Review & check in']
+const STEPS = ['Visitor details', 'Host & visit type', 'Purpose & signature', 'Review & check in']
+
+// The purpose box and the signature pad share this height, so the two
+// sit side by side as a matched pair on the same step.
+const SIGNATURE_HEIGHT = 220
 
 // Tapping one fills the purpose field; it stays free text, because the
 // purpose is also the line a PA reads on a locked phone and a fixed
@@ -307,12 +310,14 @@ export default function NewVisitor() {
           <Stepper steps={STEPS} current={step} reached={reached} onSelect={goTo} />
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
+        {/* Equal columns on every step, never a width that changes as
+            the steps change. The signature pad clears itself when its
+            width changes, so a column that grew or shrank between steps
+            would wipe a signature the visitor had already given. */}
+        <div className="mt-5 grid gap-5 lg:grid-cols-2 lg:items-start">
           {/* ---- left: the current step ---------------------------- */}
           <section
-            className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-steel-200 sm:p-6 ${
-              step === 2 ? 'hidden lg:block' : ''
-            }`}
+            className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-steel-200 sm:p-6"
           >
             {step === 0 && (
               <>
@@ -349,7 +354,13 @@ export default function NewVisitor() {
                     />
                   </Field>
 
-                  <Field label="Company / organisation">
+                  {/* The hint is here for alignment as much as help: the
+                      phone field beside it has one, and without a matching
+                      line the two inputs sit at different heights. */}
+                  <Field
+                    label="Company / organisation"
+                    hint="Optional — the business they represent"
+                  >
                     <TextInput
                       value={form.organization}
                       onChange={set('organization')}
@@ -364,8 +375,8 @@ export default function NewVisitor() {
             {step === 1 && (
               <>
                 <CardHeading
-                  title="Host & purpose"
-                  text="Who they are here to see, and why. The host sees all of this in their alert."
+                  title="Host & visit type"
+                  text="Who they are here to see. The host sees these answers in their alert."
                 />
                 <div className="mt-5 grid gap-5 sm:grid-cols-2">
                   <div className="sm:col-span-2">
@@ -430,31 +441,6 @@ export default function NewVisitor() {
                     />
                   </Field>
 
-                  <div className="sm:col-span-2">
-                    <Field as="div" label="Purpose of visit">
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {PURPOSE_SUGGESTIONS.map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            type="button"
-                            onClick={() => setForm((f) => ({ ...f, purpose: suggestion }))}
-                            className={`rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition ${
-                              form.purpose === suggestion
-                                ? 'bg-brand-50 text-brand-700 ring-brand-300'
-                                : 'bg-white text-steel-600 ring-steel-300 hover:bg-steel-50'
-                            }`}
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                      <TextArea
-                        value={form.purpose}
-                        onChange={set('purpose')}
-                        placeholder="Or describe it, e.g. Contract review with legal"
-                      />
-                    </Field>
-                  </div>
                 </div>
               </>
             )}
@@ -462,23 +448,39 @@ export default function NewVisitor() {
             {step === 2 && (
               <>
                 <CardHeading
-                  title="Hand the device to the visitor"
-                  text="They sign in the box on the right."
+                  title="Purpose of visit"
+                  text="Why they have come. The host reads this in their alert."
                 />
-                <ol className="mt-5 space-y-3">
-                  {[
-                    'Turn the screen towards the visitor',
-                    'Ask them to sign inside the box',
-                    'Take the device back and tap Next',
-                  ].map((text, i) => (
-                    <li key={text} className="flex items-center gap-3 text-steel-700">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-steel-100 text-xs font-semibold text-steel-600">
-                        {i + 1}
-                      </span>
-                      {text}
-                    </li>
+                {/* A plain textarea rather than the shared TextArea, so it
+                    matches the signature pad exactly: same height, same
+                    border, no resize handle to pull the pair out of line. */}
+                <div className="mt-4">
+                  <textarea
+                    value={form.purpose}
+                    onChange={set('purpose')}
+                    aria-label="Purpose of visit"
+                    placeholder="e.g. Contract review with the legal team"
+                    style={{ height: SIGNATURE_HEIGHT }}
+                    className="block w-full resize-none rounded-lg border-0 bg-white px-4 py-3 text-base text-ink ring-1 ring-steel-300 transition placeholder:text-steel-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-steel-400">Quick fill:</span>
+                  {PURPOSE_SUGGESTIONS.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, purpose: suggestion }))}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition ${
+                        form.purpose === suggestion
+                          ? 'bg-brand-50 text-brand-700 ring-brand-300'
+                          : 'bg-white text-steel-600 ring-steel-300 hover:bg-steel-50'
+                      }`}
+                    >
+                      {suggestion}
+                    </button>
                   ))}
-                </ol>
+                </div>
               </>
             )}
 
@@ -498,7 +500,7 @@ export default function NewVisitor() {
                     <ReviewRow label="Company">{form.organization.trim() || '—'}</ReviewRow>
                   </ReviewGroup>
 
-                  <ReviewGroup title="Host & purpose" onEdit={() => setStep(1)}>
+                  <ReviewGroup title="Host & visit type" onEdit={() => setStep(1)}>
                     <ReviewRow label="Visiting">
                       {executive
                         ? `${executive.full_name}${executive.position ? ` — ${executive.position}` : ''}`
@@ -513,10 +515,10 @@ export default function NewVisitor() {
                     <ReviewRow label="Appointment">
                       {appointmentLabel(form.has_appointment === 'yes')}
                     </ReviewRow>
-                    <ReviewRow label="Purpose">{form.purpose.trim() || '—'}</ReviewRow>
                   </ReviewGroup>
 
-                  <ReviewGroup title="Signature" onEdit={() => setStep(2)}>
+                  <ReviewGroup title="Purpose & signature" onEdit={() => setStep(2)}>
+                    <ReviewRow label="Purpose">{form.purpose.trim() || '—'}</ReviewRow>
                     <div className="px-4 pb-3">
                       {preview ? (
                         <img
@@ -560,7 +562,7 @@ export default function NewVisitor() {
               <SignaturePad
                 ref={signature}
                 disabled={busy}
-                height={220}
+                height={SIGNATURE_HEIGHT}
                 onInkChange={setHasInk}
               />
             </div>

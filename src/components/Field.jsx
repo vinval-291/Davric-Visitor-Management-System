@@ -79,7 +79,7 @@ export function Select({ error, children, ...props }) {
  */
 export function ChoiceGroup({ value, onChange, options, error }) {
   return (
-    <div role="radiogroup" className="mt-1.5 grid grid-cols-2 gap-2">
+    <div role="radiogroup" className="mt-1.5 grid auto-rows-fr grid-cols-2 gap-2">
       {options.map((option) => {
         const selected = value === option.value
         return (
@@ -89,7 +89,7 @@ export function ChoiceGroup({ value, onChange, options, error }) {
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(option.value)}
-            className={`min-h-12 rounded-lg px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+            className={`h-full min-h-[4.25rem] rounded-lg px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
               selected
                 ? 'bg-brand-50 ring-2 ring-brand-500'
                 : error
@@ -105,7 +105,9 @@ export function ChoiceGroup({ value, onChange, options, error }) {
               {option.label}
             </span>
             {option.hint && (
-              <span className="block text-xs text-steel-500">{option.hint}</span>
+              <span className="block text-xs leading-snug text-steel-500">
+                {option.hint}
+              </span>
             )}
           </button>
         )
