@@ -48,13 +48,16 @@ The receptionist taps **New Visitor** and fills in:
 - Phone — 11 digits, formatted as typed, `+234…` converted automatically
 - Company
 - **Who are you visiting?** (required) — a list grouped by department
+- **Type of visit** (required) — official or personal
+- **Do they have an appointment?** (required) — yes or no
 - Purpose of visit
 - **Signature** (required) — the device is handed to the visitor
 
 Then **Check in**.
 
-**What the browser sends:** name, phone, organisation, purpose,
-`executive_id`, the signature's storage path, and who registered it.
+**What the browser sends:** name, phone, organisation, purpose, visit
+type, appointment, `executive_id`, the signature's storage path, and
+who registered it.
 
 **What it does not send:** the arrival time, the status, the
 department, or the host's name. Those are filled in by the database.
@@ -106,6 +109,12 @@ That last row only works where push has been switched on for that
 device. Without it a phone freezes the app within seconds of being
 backgrounded, the connection closes, and nothing can reach it. The app
 detects this and offers the setup guide until it is done.
+
+Every alert says whether the visit is **official or personal**,
+whether the visitor **has an appointment**, and the **purpose** — in
+the notification text itself, so it is readable on a locked phone.
+"No appointment" is highlighted, since it is the answer most likely to
+change what the host does.
 
 The alert repeats at a chosen interval while the visitor is still
 waiting, so one missed chime during a call is not missed for good.

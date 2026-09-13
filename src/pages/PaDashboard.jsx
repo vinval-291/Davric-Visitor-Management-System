@@ -5,6 +5,8 @@ import { clockTime, elapsed } from '../lib/time.js'
 import { playAlert, systemNotify, unlockAudio, loadSettings } from '../lib/sound.js'
 import { useAuth } from '../lib/auth.jsx'
 import { supabase } from '../lib/supabase.js'
+import VisitTags from '../components/VisitTags.jsx'
+import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
 
 /**
  * Arrivals.
@@ -51,9 +53,7 @@ export default function PaDashboard() {
     systemNotify({
       title: 'Visitor has arrived',
       url: '/arrivals',
-      body: v
-        ? `${v.full_name}${v.organization ? ` (${v.organization})` : ''} is here to see ${v.executive_name_snapshot}`
-        : notification?.message,
+      body: v ? describeArrival(v) : notification?.message,
       tag: notification?.id,
     })
   }, [])
@@ -185,8 +185,15 @@ function AlertCard({ notification, onRead, onAdmit }) {
             {v.department_name_snapshot && ` · ${v.department_name_snapshot}`}
           </p>
 
-          {v.purpose && (
-            <p className="mt-1 text-sm text-steel-500">{v.purpose}</p>
+          <VisitTags visitor={v} className="mt-2" />
+
+          {v.purpose ? (
+            <p className="mt-2 text-sm text-steel-700">
+              <span className="font-medium text-steel-500">Purpose: </span>
+              {v.purpose}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-steel-400">No purpose given</p>
           )}
 
           <p className="mt-2 text-sm text-steel-500">
@@ -284,4 +291,18 @@ function NotLinked() {
       </p>
     </div>
   )
+}
+
+/**
+ * The notification text, for a banner that may be all the host reads.
+ * Everything they need to decide whether to send someone up, in the
+ * order they need it.
+ */
+function describeArrival(v) {
+  const who = `${v.full_name}${v.organization ? ` (${v.organization})` : ''} is here to see ${v.executive_name_snapshot}.`
+  const kind = [visitTypeLabel(v.visit_type), appointmentLabel(v.has_appointment)]
+    .filter(Boolean)
+    .join(', ')
+  const purpose = v.purpose ? ` Purpose: ${v.purpose}` : ''
+  return `${who}${kind ? ` ${kind}.` : ''}${purpose}`
 }

@@ -1,7 +1,19 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AppShell from '../components/AppShell.jsx'
-import { Field, TextInput, TextArea, Select } from '../components/Field.jsx'
+import {
+  Field,
+  TextInput,
+  TextArea,
+  Select,
+  ChoiceGroup,
+} from '../components/Field.jsx'
+import {
+  VISIT_TYPES,
+  APPOINTMENT_CHOICES,
+  visitTypeLabel,
+  appointmentLabel,
+} from '../lib/visit.js'
 import SignaturePad from '../components/SignaturePad.jsx'
 import { useExecutives } from '../lib/useExecutives.js'
 import { formatPhone, normalizePhone, isValidPhone } from '../lib/phone.js'
@@ -14,6 +26,8 @@ const EMPTY = {
   phone: '',
   organization: '',
   executive_id: '',
+  visit_type: '',
+  has_appointment: '',
   purpose: '',
 }
 
@@ -34,6 +48,11 @@ export default function NewVisitor() {
     setErrors((x) => ({ ...x, [key]: undefined }))
   }
 
+  const choose = (key) => (value) => {
+    setForm((f) => ({ ...f, [key]: value }))
+    setErrors((x) => ({ ...x, [key]: undefined }))
+  }
+
   function validate() {
     const next = {}
     if (!form.full_name.trim()) {
@@ -42,6 +61,10 @@ export default function NewVisitor() {
       next.full_name = 'That name looks too short'
     }
     if (!form.executive_id) next.executive_id = 'Select who they are visiting'
+    if (!form.visit_type) next.visit_type = 'Ask whether it is official or personal'
+    if (!form.has_appointment) {
+      next.has_appointment = 'Ask whether they have an appointment'
+    }
     if (!isValidPhone(form.phone)) {
       next.phone = 'Phone number must be 11 digits'
     }
@@ -91,12 +114,14 @@ export default function NewVisitor() {
         phone: normalizePhone(form.phone) || null,
         organization: form.organization.trim() || null,
         purpose: form.purpose.trim() || null,
+        visit_type: form.visit_type,
+        has_appointment: form.has_appointment === 'yes',
         executive_id: form.executive_id,
         signature_path: signaturePath,
         created_by: user.id,
       })
       .select(
-        'id, full_name, organization, check_in_time, executive_name_snapshot, department_name_snapshot',
+        'id, full_name, organization, check_in_time, executive_name_snapshot, department_name_snapshot, visit_type, has_appointment',
       )
       .single()
 
@@ -234,6 +259,38 @@ export default function NewVisitor() {
             )}
           </div>
 
+          {/* Asked of every visitor, and shown to the host before they
+              decide anything: a booked official meeting and an
+              unannounced personal call want different answers. Side by
+              side from sm up, stacked on a phone. */}
+          <Field
+            as="div"
+            label="Type of visit"
+            required
+            error={errors.visit_type}
+          >
+            <ChoiceGroup
+              value={form.visit_type}
+              onChange={choose('visit_type')}
+              options={VISIT_TYPES}
+              error={errors.visit_type}
+            />
+          </Field>
+
+          <Field
+            as="div"
+            label="Do they have an appointment?"
+            required
+            error={errors.has_appointment}
+          >
+            <ChoiceGroup
+              value={form.has_appointment}
+              onChange={choose('has_appointment')}
+              options={APPOINTMENT_CHOICES}
+              error={errors.has_appointment}
+            />
+          </Field>
+
           <div className="sm:col-span-2">
             <Field label="Purpose of visit">
               <TextArea
@@ -316,6 +373,16 @@ function CheckedInCard({ visitor, notified, onAnother }) {
               ` · ${visitor.department_name_snapshot}`}
           </p>
           <p className="mt-0.5 text-steel-600">Check-in time: {time}</p>
+          {(visitor.visit_type || visitor.has_appointment != null) && (
+            <p className="mt-0.5 text-steel-600">
+              {[
+                visitTypeLabel(visitor.visit_type),
+                appointmentLabel(visitor.has_appointment),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
           {notified === null ? (
             <p className="mt-3 text-sm text-steel-400">Notifying…</p>
           ) : notified.length > 0 ? (

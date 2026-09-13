@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { signatureUrl } from '../lib/useVisitors.js'
 import { formatPhone } from '../lib/phone.js'
+import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
 import { clockTime, dateTime, elapsed } from '../lib/time.js'
 
 export default function VisitorDetail({ visitor, onClose, onCheckOut }) {
@@ -76,6 +77,10 @@ export default function VisitorDetail({ visitor, onClose, onCheckOut }) {
           </Row>
           <Row label="Phone">
             {visitor.phone ? formatPhone(visitor.phone) : '—'}
+          </Row>
+          <Row label="Visit">{visitTypeLabel(visitor.visit_type) ?? '—'}</Row>
+          <Row label="Appointment">
+            {appointmentLabel(visitor.has_appointment) ?? '—'}
           </Row>
           <Row label="Purpose">{visitor.purpose || '—'}</Row>
           <Row label="Arrived">{dateTime(visitor.check_in_time)}</Row>

@@ -22,6 +22,8 @@ Sign in as the receptionist account.
 - [ ] Phone rejects fewer than 11 digits
 - [ ] Phone accepts `+234...` and converts it to `0...`
 - [ ] The executive list is grouped by department
+- [ ] Checking in without choosing official/personal is refused
+- [ ] Checking in without answering the appointment question is refused
 - [ ] Checking in without a signature is refused
 - [ ] Check-in succeeds and shows the arrival time
 - [ ] The confirmation names the person who was notified
@@ -57,6 +59,9 @@ Two windows, or better, two devices.
 - [ ] A visitor registered at reception appears **without refreshing**
 - [ ] The chime sounds
 - [ ] The alert shows visitor, company, host and arrival time
+- [ ] It also shows official/personal, appointment and purpose
+- [ ] The same details appear in the notification on a locked phone
+- [ ] "No appointment" is visibly highlighted
 - [ ] "Waiting" time increases on its own
 - [ ] A visitor for an executive this PA does *not* cover never appears
 - [ ] **Send up** flips the card to "Sent up" and records the wait

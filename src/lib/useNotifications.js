@@ -5,6 +5,7 @@ import { sendPushFor } from './push.js'
 
 const VISITOR_FIELDS = `
   id, full_name, organization, purpose, phone,
+  visit_type, has_appointment,
   executive_name_snapshot, executive_position_snapshot,
   department_name_snapshot, check_in_time, admitted_at,
   check_out_time, status

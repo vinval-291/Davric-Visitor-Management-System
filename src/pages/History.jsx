@@ -7,6 +7,7 @@ import { useVisitors } from '../lib/useVisitors.js'
 import { toCsv, downloadCsv } from '../lib/csv.js'
 import { dateTime, clockTime, elapsed } from '../lib/time.js'
 import { formatPhone } from '../lib/phone.js'
+import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
 import { inputClass, Button } from '../components/admin/ui.jsx'
 
 /** Local midnight, N days back, as an ISO string. */
@@ -91,6 +92,8 @@ export default function History() {
         { label: 'Visiting', value: (v) => v.executive_name_snapshot },
         { label: 'Position', value: (v) => v.executive_position_snapshot },
         { label: 'Department', value: (v) => v.department_name_snapshot },
+        { label: 'Visit type', value: (v) => visitTypeLabel(v.visit_type) ?? '' },
+        { label: 'Appointment', value: (v) => appointmentLabel(v.has_appointment) ?? '' },
         { label: 'Purpose', value: (v) => v.purpose },
         { label: 'Arrived', value: (v) => dateTime(v.check_in_time) },
         { label: 'Sent up', value: (v) => (v.admitted_at ? dateTime(v.admitted_at) : '') },

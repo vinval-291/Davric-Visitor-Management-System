@@ -158,6 +158,8 @@ await mustFail(
   anon.from('visitors').insert({
     full_name: MARKER,
     executive_id: coveredId,
+    visit_type: 'official',
+    has_appointment: true,
     executive_name_snapshot: 'forged',
   }),
 )
@@ -170,6 +172,8 @@ await mustPass(
   desk.client.from('visitors').insert({
     full_name: `${MARKER} desk`,
     executive_id: coveredId,
+    visit_type: 'official',
+    has_appointment: true,
     created_by: desk.userId,
   }),
 )
@@ -178,6 +182,8 @@ await mustFail(
   desk.client.from('visitors').insert({
     full_name: `${MARKER} forged`,
     executive_id: coveredId,
+    visit_type: 'official',
+    has_appointment: true,
     created_by: admin.userId,
   }),
 )
@@ -263,6 +269,8 @@ const { data: hidden } = await admin.client
   .insert({
     full_name: `${MARKER} hidden`,
     executive_id: uncoveredId,
+    visit_type: 'official',
+    has_appointment: true,
     created_by: admin.userId,
   })
   .select('id')
@@ -283,6 +291,8 @@ await mustFail(
   pa.client.from('visitors').insert({
     full_name: `${MARKER} by pa`,
     executive_id: coveredId,
+    visit_type: 'official',
+    has_appointment: true,
     created_by: pa.userId,
   }),
 )

@@ -102,7 +102,8 @@ three unaided while you watch and say nothing.
 1. Sign in
 2. **New Visitor** → name, phone, company
 3. **Who are you visiting?** — grouped by department
-4. Purpose of visit
+4. **Official or personal**, whether they **have an appointment**, and
+   the purpose of the visit
 5. **Hand the device to the visitor to sign** — this is the part that
    feels unfamiliar, so practise the handover
 6. **Check in**
@@ -136,6 +137,9 @@ Points worth making explicitly:
 Points worth making:
 
 - They see only visitors for the executives they cover.
+- Each alert says whether the visit is official or personal, whether
+  it was booked, and why the visitor has come. **No appointment** is
+  highlighted — worth checking with the executive before sending up.
 - **Send up** is what tells reception the visitor may come up. Nothing
   happens until they press it.
 - Alerts only reach a device where push has been enabled — so it must

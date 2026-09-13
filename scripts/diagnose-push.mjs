@@ -92,6 +92,8 @@ const { data: visit, error: visitError } = await desk.client
   .insert({
     full_name: MARKER,
     executive_id: assignment.executive_id,
+    visit_type: 'official',
+    has_appointment: true,
     created_by: desk.id,
   })
   .select('id')

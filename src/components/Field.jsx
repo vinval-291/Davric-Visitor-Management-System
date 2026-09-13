@@ -65,3 +65,51 @@ export function Select({ error, children, ...props }) {
     </select>
   )
 }
+
+/**
+ * A two- or three-way answer as large buttons rather than a dropdown.
+ *
+ * On a touchscreen a select opens a system picker that covers the form,
+ * for a question that has two possible answers. Buttons show both
+ * options at once and take one tap.
+ *
+ * Wrap it in <Field as="div">, never a label: a label forwards every
+ * tap inside it to its first button, so choosing the second option
+ * would silently select the first.
+ */
+export function ChoiceGroup({ value, onChange, options, error }) {
+  return (
+    <div role="radiogroup" className="mt-1.5 grid grid-cols-2 gap-2">
+      {options.map((option) => {
+        const selected = value === option.value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(option.value)}
+            className={`min-h-12 rounded-lg px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+              selected
+                ? 'bg-brand-50 ring-2 ring-brand-500'
+                : error
+                  ? 'bg-steel-50 ring-1 ring-brand-500 hover:bg-white'
+                  : 'bg-steel-50 ring-1 ring-steel-300 hover:bg-white'
+            }`}
+          >
+            <span
+              className={`block text-base font-semibold ${
+                selected ? 'text-brand-700' : 'text-ink'
+              }`}
+            >
+              {option.label}
+            </span>
+            {option.hint && (
+              <span className="block text-xs text-steel-500">{option.hint}</span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
