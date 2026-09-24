@@ -4,12 +4,25 @@ import { formatPhone } from '../lib/phone.js'
 import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
 import { clockTime, dateTime, elapsed } from '../lib/time.js'
 
-export default function VisitorDetail({ visitor, onClose, onCheckOut }) {
+/**
+ * canSeeSignature and canCheckOut are false for a host reading their
+ * own history. Both would fail at the database anyway -- signatures
+ * are desk-only in storage, and only reception may check a visitor
+ * out -- so the dialog does not offer what it cannot deliver.
+ */
+export default function VisitorDetail({
+  visitor,
+  onClose,
+  onCheckOut,
+  canSeeSignature = true,
+  canCheckOut = true,
+}) {
   const [signature, setSignature] = useState(undefined) // undefined = loading
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!canSeeSignature) return
     let active = true
     setSignature(undefined)
     signatureUrl(visitor.signature_path).then((url) => {
@@ -107,7 +120,11 @@ export default function VisitorDetail({ visitor, onClose, onCheckOut }) {
             Signature
           </p>
           <div className="mt-2 overflow-hidden rounded-lg bg-white ring-1 ring-steel-200">
-            {signature === undefined ? (
+            {!canSeeSignature ? (
+              <p className="p-6 text-center text-sm text-steel-400">
+                Signatures are visible to reception only
+              </p>
+            ) : signature === undefined ? (
               <p className="p-6 text-center text-sm text-steel-400">Loading…</p>
             ) : signature ? (
               <img
@@ -130,7 +147,7 @@ export default function VisitorDetail({ visitor, onClose, onCheckOut }) {
         )}
 
         <div className="mt-6 flex flex-wrap gap-3">
-          {!gone && (
+          {!gone && canCheckOut && (
             <button
               onClick={handleCheckOut}
               disabled={busy}

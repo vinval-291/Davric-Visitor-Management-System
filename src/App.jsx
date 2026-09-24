@@ -56,7 +56,12 @@ export default function App() {
             <Route
               path="/history"
               element={
-                <ProtectedRoute allow={['receptionist', 'super_admin']}>
+                // Hosts get in too. What they see is decided by Row
+                // Level Security, not by this list: a PA's query
+                // returns only visits for the executives they cover.
+                <ProtectedRoute
+                  allow={['receptionist', 'super_admin', 'pa', 'executive']}
+                >
                   <History />
                 </ProtectedRoute>
               }

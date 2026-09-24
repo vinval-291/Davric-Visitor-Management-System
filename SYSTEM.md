@@ -29,7 +29,7 @@ out. Every one of those events is written to an append-only audit log.
 | Role | What they do | Where they land |
 |---|---|---|
 | **Receptionist** | Registers arrivals, checks visitors out | `/reception` |
-| **Personal Assistant** | Receives arrival alerts, sends visitors up | `/arrivals` |
+| **Personal Assistant** | Arrival alerts, sends visitors up, history for the executives they cover | `/arrivals` |
 | **Executive** | Same, for their own visitors, when no PA covers them | `/arrivals` |
 | **Super Admin** | Everything, plus configuration and reports | `/admin` |
 
@@ -197,6 +197,17 @@ staff list sees a panel saying exactly that, and who to ask — rather
 than an empty screen.
 
 ### History — `/history`
+
+Open to reception and super admins, and to PAs and executives.
+
+**What a host sees is not the same screen.** Reception and super
+admins see every visit in the building. A PA sees only visits to the
+executives they cover, and an executive only their own -- the same
+policy that governs their arrivals, so the totals, the CSV export and
+the averages are all filtered to them without the page doing
+anything. The executive filter lists only their own executives, the
+department filter is hidden, and a visit's signature and the check-out
+button are not offered, since neither is theirs to reach.
 
 Date range, executive, department, status, and free-text search, all
 filtered in the database rather than the browser. Summary figures

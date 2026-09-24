@@ -20,8 +20,14 @@ const NAV_BY_ROLE = {
     { to: '/reception', label: 'Reception' },
     { to: '/history', label: 'History' },
   ],
-  pa: [{ to: '/arrivals', label: 'Arrivals' }],
-  executive: [{ to: '/arrivals', label: 'Arrivals' }],
+  pa: [
+    { to: '/arrivals', label: 'Arrivals' },
+    { to: '/history', label: 'History' },
+  ],
+  executive: [
+    { to: '/arrivals', label: 'Arrivals' },
+    { to: '/history', label: 'History' },
+  ],
 }
 
 const SETUP_SEEN = 'vms.setup.seen'

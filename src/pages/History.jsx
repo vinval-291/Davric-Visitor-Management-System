@@ -3,6 +3,8 @@ import AppShell from '../components/AppShell.jsx'
 import VisitorDetail from '../components/VisitorDetail.jsx'
 import { useHistory, PAGE_SIZE } from '../lib/useHistory.js'
 import { useTable } from '../lib/useTable.js'
+import { useMyExecutives } from '../lib/useMyExecutives.js'
+import { useAuth, ROLE_LABEL } from '../lib/auth.jsx'
 import { useVisitors } from '../lib/useVisitors.js'
 import { toCsv, downloadCsv } from '../lib/csv.js'
 import { dateTime, clockTime, elapsed } from '../lib/time.js'
@@ -42,11 +44,19 @@ const secs = (n) => {
 }
 
 export default function History() {
+  const { role } = useAuth()
+  // Reception and admins see the whole building. A PA or an
+  // executive sees only their own visits -- enforced by RLS, so the
+  // screen only has to avoid offering them what they cannot reach.
+  const isDesk = role === 'receptionist' || role === 'super_admin'
+
   const departments = useTable('departments', { order: 'name' })
-  const executives = useTable('executives', {
+  const allExecutives = useTable('executives', {
     select: 'id, full_name, is_active',
     order: 'full_name',
   })
+  const myExecutives = useMyExecutives(!isDesk)
+  const executiveOptions = isDesk ? allExecutives.items : myExecutives.items
   const { checkOut } = useVisitors()
 
   const [preset, setPreset] = useState('30')
@@ -120,7 +130,13 @@ export default function History() {
   return (
     <AppShell
       title="Visitor history"
-      subtitle="Search and report on every visit on record"
+      subtitle={
+        isDesk
+          ? 'Search and report on every visit on record'
+          : role === 'executive'
+            ? 'Every visit recorded for you'
+            : 'Every visit to the executives you cover'
+      }
       actions={
         <Button onClick={handleExport} disabled={exporting || count === 0}>
           {exporting ? 'Preparing…' : 'Export CSV'}
@@ -153,7 +169,11 @@ export default function History() {
             ))}
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-4">
+          <div
+            className={`grid gap-2 ${
+              isDesk ? 'sm:grid-cols-4' : 'sm:grid-cols-3'
+            }`}
+          >
             <input
               value={query}
               onChange={(e) => change(setQuery)(e.target.value)}
@@ -165,25 +185,31 @@ export default function History() {
               onChange={(e) => change(setExecutiveId)(e.target.value)}
               className={inputClass}
             >
-              <option value="">Any executive</option>
-              {executives.items.map((ex) => (
+              <option value="">
+                {isDesk ? 'Any executive' : 'Any of mine'}
+              </option>
+              {executiveOptions.map((ex) => (
                 <option key={ex.id} value={ex.id}>
                   {ex.full_name}
                 </option>
               ))}
             </select>
-            <select
-              value={departmentId}
-              onChange={(e) => change(setDepartmentId)(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Any department</option>
-              {departments.items.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+            {/* A host covers one or two departments, so the filter would
+                mostly offer combinations that return nothing. */}
+            {isDesk && (
+              <select
+                value={departmentId}
+                onChange={(e) => change(setDepartmentId)(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Any department</option>
+                {departments.items.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <select
               value={status}
               onChange={(e) => change(setStatus)(e.target.value)}
@@ -307,6 +333,8 @@ export default function History() {
           visitor={active}
           onClose={() => setSelected(null)}
           onCheckOut={checkOut}
+          canSeeSignature={isDesk}
+          canCheckOut={isDesk}
         />
       )}
     </AppShell>

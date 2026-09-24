@@ -98,6 +98,13 @@ Two windows, or better, two devices.
 - [ ] Search finds a visitor from a previous day
 - [ ] Paging works past 50 records
 - [ ] Average wait and average visit show sensible values
+- [ ] As a PA, History opens and shows only visits for the executives
+      they cover
+- [ ] As a PA, the executive filter lists only their own executives,
+      and there is no department filter
+- [ ] As a PA, the totals and averages count only their own visits
+- [ ] As a PA, a visit shows no signature and no Check out button
+- [ ] As an executive, History shows only their own visitors
 - [ ] **Export CSV** downloads
 - [ ] The CSV opens in Excel with columns intact
 - [ ] A company name containing a comma does not split into two columns

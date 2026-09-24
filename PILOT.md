@@ -137,6 +137,8 @@ Points worth making explicitly:
 Points worth making:
 
 - They see only visitors for the executives they cover.
+- **History** shows past visits for those executives, with averages
+  and CSV export. Nobody else's visits appear there.
 - Each alert says whether the visit is official or personal, whether
   it was booked, and why the visitor has come. **No appointment** is
   highlighted — worth checking with the executive before sending up.
