@@ -67,6 +67,7 @@ Supabase SQL Editor. They are written to be safe to re-run.
 | `0016_executive_direct_alerts.sql` | Executives with a login are alerted directly when no PA covers them |
 | `0017_visit_type_and_appointment.sql` | Official/personal and appointment questions |
 | `0018_experience_center.sql` | Hosts can send a visitor to the Experience Center instead of up |
+| `0019_super_admin_server_time.sql` | Server time for super admins' send-up, check-out and read receipts |
 
 Then `supabase/seed.sql` for placeholder departments and executives.
 
