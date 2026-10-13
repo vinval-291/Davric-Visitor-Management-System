@@ -6,7 +6,13 @@ import { playAlert, systemNotify, unlockAudio, loadSettings } from '../lib/sound
 import { useAuth } from '../lib/auth.jsx'
 import { supabase } from '../lib/supabase.js'
 import VisitTags from '../components/VisitTags.jsx'
-import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
+import {
+  visitTypeLabel,
+  appointmentLabel,
+  sentLabel,
+  isExperienceCenter,
+  EXPERIENCE_CENTER,
+} from '../lib/visit.js'
 
 /**
  * Arrivals.
@@ -105,7 +111,7 @@ export default function PaDashboard() {
               key={n.id}
               notification={n}
               onRead={() => markRead(n.id)}
-              onAdmit={() => admit(n.visitor_id)}
+              onAdmit={(destination) => admit(n.visitor_id, destination)}
             />
           ))}
         </ul>
@@ -138,7 +144,8 @@ function Stat({ label, value, accent }) {
 }
 
 function AlertCard({ notification, onRead, onAdmit }) {
-  const [busy, setBusy] = useState(false)
+  // Which destination is being sent, so only that button says so.
+  const [busy, setBusy] = useState(null)
   const [failed, setFailed] = useState(null)
   const v = notification.visitor
 
@@ -150,10 +157,10 @@ function AlertCard({ notification, onRead, onAdmit }) {
   const admitted = Boolean(v.admitted_at)
   const unread = !notification.is_read
 
-  async function handleAdmit() {
-    setBusy(true)
-    setFailed(await onAdmit())
-    setBusy(false)
+  async function handleAdmit(destination) {
+    setBusy(destination)
+    setFailed(await onAdmit(destination))
+    setBusy(null)
     if (unread) onRead()
   }
 
@@ -207,14 +214,18 @@ function AlertCard({ notification, onRead, onAdmit }) {
             {admitted && (
               <span>
                 {' '}
-                · sent up {clockTime(v.admitted_at)} (waited{' '}
+                ·{' '}
+                {isExperienceCenter(v)
+                  ? `sent to the ${EXPERIENCE_CENTER}`
+                  : 'sent up'}{' '}
+                {clockTime(v.admitted_at)} (waited{' '}
                 {elapsed(v.check_in_time, v.admitted_at)})
               </span>
             )}
           </p>
         </div>
 
-        <StatusPill gone={gone} admitted={admitted} />
+        <StatusPill gone={gone} visitor={v} />
       </div>
 
       {failed && (
@@ -225,13 +236,24 @@ function AlertCard({ notification, onRead, onAdmit }) {
 
       <div className="mt-4 flex flex-wrap gap-2">
         {!admitted && !gone && (
-          <button
-            onClick={handleAdmit}
-            disabled={busy}
-            className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
-          >
-            {busy ? 'Sending up…' : 'Send up'}
-          </button>
+          <>
+            <button
+              onClick={() => handleAdmit('office')}
+              disabled={Boolean(busy)}
+              className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+            >
+              {busy === 'office' ? 'Sending up…' : 'Send up'}
+            </button>
+            <button
+              onClick={() => handleAdmit('experience_center')}
+              disabled={Boolean(busy)}
+              className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-300 transition hover:bg-brand-50 disabled:opacity-60"
+            >
+              {busy === 'experience_center'
+                ? 'Sending…'
+                : `Send to ${EXPERIENCE_CENTER}`}
+            </button>
+          </>
         )}
         {unread && (
           <button
@@ -246,7 +268,8 @@ function AlertCard({ notification, onRead, onAdmit }) {
   )
 }
 
-function StatusPill({ gone, admitted }) {
+function StatusPill({ gone, visitor }) {
+  const admitted = Boolean(visitor.admitted_at)
   const [bg, ring, dot, text] = gone
     ? ['bg-gone-50', 'ring-gone-500/30', 'bg-gone-500', 'text-gone-700']
     : admitted
@@ -258,7 +281,7 @@ function StatusPill({ gone, admitted }) {
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ring-1 ${bg} ${ring} ${text}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      {gone ? 'Checked out' : admitted ? 'Sent up' : 'Waiting'}
+      {gone ? 'Checked out' : admitted ? sentLabel(visitor) : 'Waiting'}
     </span>
   )
 }

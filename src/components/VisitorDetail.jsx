@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { signatureUrl } from '../lib/useVisitors.js'
 import { formatPhone } from '../lib/phone.js'
-import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
+import {
+  visitTypeLabel,
+  appointmentLabel,
+  destinationLabel,
+} from '../lib/visit.js'
 import { clockTime, dateTime, elapsed } from '../lib/time.js'
 
 /**
@@ -97,9 +101,9 @@ export default function VisitorDetail({
           </Row>
           <Row label="Purpose">{visitor.purpose || '—'}</Row>
           <Row label="Arrived">{dateTime(visitor.check_in_time)}</Row>
-          <Row label="Sent up">
+          <Row label="Sent to">
             {visitor.admitted_at
-              ? `${clockTime(visitor.admitted_at)} · waited ${elapsed(
+              ? `${destinationLabel(visitor)} · ${clockTime(visitor.admitted_at)} · waited ${elapsed(
                   visitor.check_in_time,
                   visitor.admitted_at,
                 )}`

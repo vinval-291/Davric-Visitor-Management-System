@@ -120,17 +120,23 @@ change what the host does.
 The alert repeats at a chosen interval while the visitor is still
 waiting, so one missed chime during a call is not missed for good.
 
-### 5. Send up
+### 5. Send up, or send to the Experience Center
 
-The host taps **Send up**. The database records `admitted_at` and
-`admitted_by` using its own clock and its own idea of who is signed in
-— the value the browser sends is discarded.
+The host taps **Send up**, or **Send to Experience Center** when the
+visitor is better served there than upstairs. The database records
+`admitted_at` and `admitted_by` using its own clock and its own idea of
+who is signed in — the value the browser sends is discarded — and
+`admitted_to` (`office` or `experience_center`) records which was
+chosen.
 
 This immediately alerts **reception**: a green banner and a sound, so
-the receptionist can tell the waiting visitor to go up without being
-asked. They tap **Told them** to dismiss it.
+the receptionist can tell the waiting visitor where to go without
+being asked. The banner says which — "may go up" or "should go to the
+Experience Center". They tap **Told them** to dismiss it.
 
-Admission happens once. It cannot be un-sent or re-stamped.
+Admission happens once. It cannot be un-sent, re-stamped, or
+redirected afterwards. Either answer ends the wait, so both count
+towards **average wait**.
 
 ### 6. Check out
 
@@ -190,7 +196,8 @@ total counts, then a card per alert with the visitor, their company,
 who they are here to see, the purpose, and a waiting time that climbs
 on its own.
 
-**Send up** and **Mark as read** are the only actions.
+**Send up**, **Send to Experience Center** and **Mark as read** are
+the only actions.
 
 An executive whose account has not been linked to their entry in the
 staff list sees a panel saying exactly that, and who to ask — rather

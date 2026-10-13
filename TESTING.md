@@ -69,6 +69,15 @@ Two windows, or better, two devices.
 - [ ] A visitor for an executive this PA does *not* cover never appears
 - [ ] **Send up** flips the card to "Sent up" and records the wait
 - [ ] The reception screen updates to "Sent up" without refreshing
+- [ ] **Send to Experience Center** flips the card to "Sent to
+      Experience Center" and records the wait
+- [ ] Reception's banner says the visitor "should go to the Experience
+      Center", not "may go up"
+- [ ] A locked reception phone's push says "Visitor to the Experience
+      Center"
+- [ ] After either button, neither is offered again
+- [ ] History, the visit dialog and the CSV show where the visitor was
+      sent; the audit tab says "sent to the Experience Center"
 - [ ] **Mark as read** clears the "New" badge and the unread count
 - [ ] Read state survives a page reload
 - [ ] Sound toggle survives a page reload

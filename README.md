@@ -63,6 +63,10 @@ Supabase SQL Editor. They are written to be safe to re-run.
 | `0012_admission_notification_type.sql` | New notification type — **run on its own** |
 | `0013_notify_desk_on_admission.sql` | Alerts reception when a PA sends a visitor up |
 | `0014_push_subscriptions.sql` | Devices registered for push |
+| `0015_executive_role.sql` | The executive role — **run on its own** |
+| `0016_executive_direct_alerts.sql` | Executives with a login are alerted directly when no PA covers them |
+| `0017_visit_type_and_appointment.sql` | Official/personal and appointment questions |
+| `0018_experience_center.sql` | Hosts can send a visitor to the Experience Center instead of up |
 
 Then `supabase/seed.sql` for placeholder departments and executives.
 

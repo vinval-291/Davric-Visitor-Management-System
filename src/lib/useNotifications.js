@@ -7,7 +7,7 @@ const VISITOR_FIELDS = `
   id, full_name, organization, purpose, phone,
   visit_type, has_appointment,
   executive_name_snapshot, executive_position_snapshot,
-  department_name_snapshot, check_in_time, admitted_at,
+  department_name_snapshot, check_in_time, admitted_at, admitted_to,
   check_out_time, status
 `
 
@@ -113,12 +113,16 @@ export function useNotifications({ onArrival } = {}) {
   }, [load])
 
   const admit = useCallback(
-    async (visitorId) => {
+    async (visitorId, destination = 'office') => {
       // admitted_at and admitted_by are both set server-side; the value
-      // sent here is only a trigger for the update.
+      // sent here is only a trigger for the update. admitted_to is the
+      // host's choice: 'office' (send up) or 'experience_center'.
       const { data, error } = await supabase
         .from('visitors')
-        .update({ admitted_at: new Date().toISOString() })
+        .update({
+          admitted_at: new Date().toISOString(),
+          admitted_to: destination,
+        })
         .eq('id', visitorId)
         .select(VISITOR_FIELDS)
         .maybeSingle()

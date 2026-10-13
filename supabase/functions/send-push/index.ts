@@ -85,8 +85,21 @@ Deno.serve(async (req) => {
 
     if (!subscriptions?.length) return json({ sent: 0, reason: 'no devices registered' })
 
+    // The host may have sent the visitor upstairs or to the Experience
+    // Center. The message body already says which; the title must not
+    // contradict it.
+    const { data: visit } = await admin
+      .from('visitors')
+      .select('admitted_to')
+      .eq('id', visitor_id)
+      .maybeSingle()
+
     const titleFor = (type: string) =>
-      type === 'visitor_admitted' ? 'Visitor may go up' : 'Visitor has arrived'
+      type !== 'visitor_admitted'
+        ? 'Visitor has arrived'
+        : visit?.admitted_to === 'experience_center'
+          ? 'Visitor to the Experience Center'
+          : 'Visitor may go up'
 
     let sent = 0
     const expired: string[] = []

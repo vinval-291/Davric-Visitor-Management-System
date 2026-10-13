@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { useNotifications } from '../lib/useNotifications.js'
 import { playAlert, systemNotify, unlockAudio } from '../lib/sound.js'
 import { clockTime } from '../lib/time.js'
+import { isExperienceCenter, EXPERIENCE_CENTER } from '../lib/visit.js'
 
 /**
  * Alerts for the reception desk.
@@ -19,7 +20,9 @@ export default function DeskAlerts() {
     if (notification?.type !== 'visitor_admitted') return
     playAlert()
     systemNotify({
-      title: 'Visitor may go up',
+      title: isExperienceCenter(notification.visitor)
+        ? `Visitor to the ${EXPERIENCE_CENTER}`
+        : 'Visitor may go up',
       body: notification.message,
       tag: notification.id,
     })
@@ -35,34 +38,45 @@ export default function DeskAlerts() {
 
   return (
     <ul className="mb-6 space-y-2">
-      {pending.map((n) => (
-        <li
-          key={n.id}
-          className="flex flex-wrap items-center gap-3 rounded-xl bg-inside-50 px-5 py-4 ring-1 ring-inside-500/40"
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-inside-500 text-white">
-            ↑
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-inside-700">
-              {n.visitor?.full_name ?? 'A visitor'} may go up
-            </p>
-            <p className="text-sm text-steel-600">
-              {n.visitor?.executive_name_snapshot
-                ? `${n.visitor.executive_name_snapshot} has sent for them`
-                : n.message}
-              {n.visitor?.admitted_at &&
-                ` · ${clockTime(n.visitor.admitted_at)}`}
-            </p>
-          </div>
-          <button
-            onClick={() => markRead(n.id)}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+      {pending.map((n) => {
+        // The host can send a visitor upstairs to them, or to the
+        // Experience Center instead. Reception reads this out, so the
+        // wording has to say which.
+        const toCenter = isExperienceCenter(n.visitor)
+        const host = n.visitor?.executive_name_snapshot
+
+        return (
+          <li
+            key={n.id}
+            className="flex flex-wrap items-center gap-3 rounded-xl bg-inside-50 px-5 py-4 ring-1 ring-inside-500/40"
           >
-            Told them
-          </button>
-        </li>
-      ))}
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-inside-500 text-white">
+              {toCenter ? '→' : '↑'}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-inside-700">
+                {n.visitor?.full_name ?? 'A visitor'}{' '}
+                {toCenter ? `should go to the ${EXPERIENCE_CENTER}` : 'may go up'}
+              </p>
+              <p className="text-sm text-steel-600">
+                {!host
+                  ? n.message
+                  : toCenter
+                    ? `${host} has sent them there`
+                    : `${host} has sent for them`}
+                {n.visitor?.admitted_at &&
+                  ` · ${clockTime(n.visitor.admitted_at)}`}
+              </p>
+            </div>
+            <button
+              onClick={() => markRead(n.id)}
+              className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-steel-700 ring-1 ring-steel-300 transition hover:bg-steel-50"
+            >
+              Told them
+            </button>
+          </li>
+        )
+      })}
     </ul>
   )
 }

@@ -5,7 +5,7 @@ export const VISITOR_FIELDS = `
   id, full_name, phone, organization, purpose,
   visit_type, has_appointment,
   executive_name_snapshot, executive_position_snapshot,
-  department_name_snapshot, check_in_time, admitted_at,
+  department_name_snapshot, check_in_time, admitted_at, admitted_to,
   check_out_time, status, signature_path
 `
 

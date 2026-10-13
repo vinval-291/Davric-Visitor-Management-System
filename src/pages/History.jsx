@@ -9,7 +9,13 @@ import { useVisitors } from '../lib/useVisitors.js'
 import { toCsv, downloadCsv } from '../lib/csv.js'
 import { dateTime, clockTime, elapsed } from '../lib/time.js'
 import { formatPhone } from '../lib/phone.js'
-import { visitTypeLabel, appointmentLabel } from '../lib/visit.js'
+import {
+  visitTypeLabel,
+  appointmentLabel,
+  destinationLabel,
+  isExperienceCenter,
+  EXPERIENCE_CENTER,
+} from '../lib/visit.js'
 import { inputClass, Button } from '../components/admin/ui.jsx'
 
 /** Local midnight, N days back, as an ISO string. */
@@ -106,7 +112,8 @@ export default function History() {
         { label: 'Appointment', value: (v) => appointmentLabel(v.has_appointment) ?? '' },
         { label: 'Purpose', value: (v) => v.purpose },
         { label: 'Arrived', value: (v) => dateTime(v.check_in_time) },
-        { label: 'Sent up', value: (v) => (v.admitted_at ? dateTime(v.admitted_at) : '') },
+        { label: 'Sent to', value: (v) => destinationLabel(v) ?? '' },
+        { label: 'Sent at', value: (v) => (v.admitted_at ? dateTime(v.admitted_at) : '') },
         { label: 'Departed', value: (v) => (v.check_out_time ? dateTime(v.check_out_time) : '') },
         {
           label: 'Waited',
@@ -277,6 +284,11 @@ export default function History() {
                       {v.admitted_at
                         ? elapsed(v.check_in_time, v.admitted_at)
                         : '—'}
+                      {isExperienceCenter(v) && (
+                        <p className="text-xs text-steel-400">
+                          to {EXPERIENCE_CENTER}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-steel-600">
                       {v.check_out_time

@@ -6,6 +6,7 @@ import DeskAlerts from '../components/DeskAlerts.jsx'
 import { useVisitors } from '../lib/useVisitors.js'
 import { smartTime, elapsed, isBeforeToday } from '../lib/time.js'
 import { normalizePhone } from '../lib/phone.js'
+import { sentLabel } from '../lib/visit.js'
 
 const FILTERS = [
   { key: 'inside', label: 'Inside now' },
@@ -222,7 +223,7 @@ function VisitorCard({ visitor: v, onOpen, onCheckOut }) {
             <p className="truncate text-sm text-steel-500">{v.organization}</p>
           )}
         </div>
-        <StatusPill gone={gone} admitted={Boolean(v.admitted_at)} />
+        <StatusPill gone={gone} visitor={v} />
       </div>
 
       <p className="mt-2 text-sm text-steel-600">
@@ -289,7 +290,7 @@ function VisitorRow({ visitor: v, onOpen, onCheckOut }) {
         </p>
       </td>
       <td className="px-4 py-3">
-        <StatusPill gone={gone} admitted={Boolean(v.admitted_at)} />
+        <StatusPill gone={gone} visitor={v} />
         {stale && (
           <span className="mt-1 block text-xs font-medium text-brand-700">
             Not checked out
@@ -311,7 +312,8 @@ function VisitorRow({ visitor: v, onOpen, onCheckOut }) {
   )
 }
 
-function StatusPill({ gone, admitted }) {
+function StatusPill({ gone, visitor }) {
+  const admitted = Boolean(visitor.admitted_at)
   const [bg, ring, dot, text] = gone
     ? ['bg-gone-50', 'ring-gone-500/30', 'bg-gone-500', 'text-gone-700']
     : admitted
@@ -323,7 +325,7 @@ function StatusPill({ gone, admitted }) {
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${bg} ${ring} ${text}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      {gone ? 'Checked out' : admitted ? 'Sent up' : 'Waiting'}
+      {gone ? 'Checked out' : admitted ? sentLabel(visitor) : 'Waiting'}
     </span>
   )
 }

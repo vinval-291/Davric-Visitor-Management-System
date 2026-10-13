@@ -194,7 +194,11 @@ function summarise(row) {
     case 'visitor.check_in':
       return `${d.visitor}${d.organization ? ` (${d.organization})` : ''} checked in to see ${d.visiting}${d.signed ? '' : ' — no signature'}`
     case 'visitor.admitted':
-      return `${d.visitor} sent up to ${d.visiting}${
+      return `${d.visitor} ${
+        d.sent_to === 'experience_center'
+          ? `(visiting ${d.visiting}) sent to the Experience Center`
+          : `sent up to ${d.visiting}`
+      }${
         mins(d.waited_seconds) ? ` after waiting ${mins(d.waited_seconds)}` : ''
       }`
     case 'visitor.check_out':

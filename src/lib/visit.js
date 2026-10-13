@@ -34,3 +34,25 @@ export function appointmentLabel(hasAppointment) {
   if (hasAppointment === false) return 'No appointment'
   return null
 }
+
+/**
+ * Where the host sent a visitor: upstairs to them, or to the
+ * Experience Center. Stored as visitors.admitted_to; a visit with an
+ * admission but no destination predates the choice and went upstairs.
+ */
+export const EXPERIENCE_CENTER = 'Experience Center'
+
+export function isExperienceCenter(visitor) {
+  return visitor?.admitted_to === 'experience_center'
+}
+
+/** "Sent up" / "Sent to Experience Center", for timelines and pills. */
+export function sentLabel(visitor) {
+  return isExperienceCenter(visitor) ? `Sent to ${EXPERIENCE_CENTER}` : 'Sent up'
+}
+
+/** The place itself, for a "Sent to" column. */
+export function destinationLabel(visitor) {
+  if (!visitor?.admitted_at) return null
+  return isExperienceCenter(visitor) ? EXPERIENCE_CENTER : 'Upstairs'
+}
